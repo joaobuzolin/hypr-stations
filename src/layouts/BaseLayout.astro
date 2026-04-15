@@ -1,0 +1,70 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  fullscreen?: boolean;
+}
+
+const {
+  title,
+  description = 'HYPR Station — Plataforma de mapas de cobertura de mídia. Rádio, celular e TV.',
+  fullscreen = false,
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title} | HYPR Station</title>
+  <meta name="description" content={description} />
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+  <!-- OG -->
+  <meta property="og:title" content={`${title} | HYPR Station`} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+
+  <!-- Fonts: Urbanist -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="preload"
+    href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap"
+    as="style"
+  />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap"
+    media="print"
+    onload="this.media='all'"
+  />
+  <noscript>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap"
+    />
+  </noscript>
+
+  <!-- Theme: apply before paint to avoid flash -->
+  <script is:inline>
+    (function () {
+      const t = localStorage.getItem('hypr-theme') || 'dark';
+      if (t === 'light') document.documentElement.classList.add('light');
+    })();
+  </script>
+
+  <!-- Global CSS (Tailwind + tokens) -->
+  <style>
+    @import '../styles/global.css';
+  </style>
+</head>
+<body class:list={[fullscreen && 'h-screen overflow-hidden']}>
+  <slot />
+</body>
+</html>

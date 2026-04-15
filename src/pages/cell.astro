@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/shared/Header';
+---
+
+<BaseLayout title="Cell Map" description="Mapa de ERBs e cobertura celular do Brasil" fullscreen>
+  <div class="h-screen flex flex-col">
+    <Header client:load currentPage="/cell" />
+
+    <main class="flex-1 flex items-center justify-center">
+      <div class="text-center px-6">
+        <div class="w-16 h-16 rounded-2xl bg-[var(--accent-muted)] text-[var(--accent)]
+                    flex items-center justify-center mx-auto mb-6">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 20h.01" /><path d="M7 20v-4" /><path d="M12 20v-8" />
+            <path d="M17 20V8" /><path d="M22 4v16" />
+          </svg>
+        </div>
+        <h1 class="font-heading text-2xl font-bold text-[var(--text-primary)] mb-2">
+          Cell Map
+        </h1>
+        <p class="text-sm text-[var(--text-secondary)] mb-2">
+          Mapa de Estações Rádio Base em desenvolvimento.
+        </p>
+        <p class="text-xs text-[var(--text-muted)] mb-6">
+          ~110K ERBs · Vivo, Claro, TIM, Brisanet · 2G–5G · Fonte: Anatel/SMP
+        </p>
+        <a href="/"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                  bg-[var(--bg-surface2)] text-[var(--text-secondary)] border border-[var(--border)]
+                  hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+          </svg>
+          Voltar ao Hub
+        </a>
+      </div>
+    </main>
+  </div>
+</BaseLayout>

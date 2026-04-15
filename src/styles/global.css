@@ -1,0 +1,145 @@
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════
+   HYPR Station — Design Tokens
+   Paleta oficial HYPR brand + extensões para Station
+   ═══════════════════════════════════════════════════ */
+
+@theme {
+  --color-hypr-dark: #1C262F;
+  --color-hypr-surface: #22303B;
+  --color-hypr-surface2: #2A3A47;
+  --color-hypr-light: #FCFEFE;
+  --color-hypr-light2: #F4F7FA;
+
+  --color-neutral-50: #F0F3F6;
+  --color-neutral-100: #E5EBF2;
+  --color-neutral-200: #C5CDD6;
+  --color-neutral-300: #78909C;
+  --color-neutral-400: #607D8B;
+  --color-neutral-500: #536872;
+  --color-neutral-600: #3E4F59;
+  --color-neutral-700: #2C3A44;
+  --color-neutral-800: #1E2A33;
+
+  --color-teal-100: #E0F4FB;
+  --color-teal-200: #C5EAF6;
+  --color-teal-300: #7ACCE5;
+  --color-teal-400: #3397B9;
+  --color-teal-500: #2A7F9E;
+  --color-teal-600: #246C84;
+  --color-teal-700: #1A5468;
+  --color-teal-800: #12404F;
+
+  --color-gold-100: #FFF9D6;
+  --color-gold-200: #F6F0A9;
+  --color-gold-400: #EDD900;
+  --color-gold-600: #B1A300;
+  --color-gold-800: #7A7000;
+
+  --color-red-100: #FFEBEB;
+  --color-red-200: #FFBEBF;
+  --color-red-400: #F5272B;
+  --color-red-600: #B11C1F;
+  --color-red-800: #7A1315;
+
+  --color-op-vivo: #7B3FA0;
+  --color-op-claro: #C32E07;
+  --color-op-tim: #2196F3;
+  --color-op-brisanet: #076783;
+  --color-op-algar: #018376;
+  --color-op-unifique: #4CB050;
+  --color-op-other: #5F4237;
+
+  --color-tech-5g: #F5272B;
+  --color-tech-4g: #3397B9;
+  --color-tech-3g: #EDD900;
+  --color-tech-2g: #78909C;
+
+  --font-heading: 'Urbanist', system-ui, sans-serif;
+  --font-body: 'Urbanist', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --spacing-18: 4.5rem;
+  --spacing-88: 22rem;
+  --spacing-120: 30rem;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.12), 0 8px 32px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    color-scheme: dark;
+    --bg: var(--color-hypr-dark);
+    --bg-surface: var(--color-hypr-surface);
+    --bg-surface2: var(--color-hypr-surface2);
+    --text-primary: var(--color-hypr-light);
+    --text-secondary: var(--color-neutral-300);
+    --text-muted: var(--color-neutral-400);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.15);
+    --accent: var(--color-teal-400);
+    --accent-hover: var(--color-teal-300);
+    --accent-muted: rgba(51, 151, 185, 0.12);
+    --accent-glow: rgba(51, 151, 185, 0.3);
+    --on-accent: #000000;
+    --overlay: rgba(0, 0, 0, 0.6);
+  }
+
+  html.light {
+    color-scheme: light;
+    --bg: var(--color-hypr-light);
+    --bg-surface: #FFFFFF;
+    --bg-surface2: var(--color-hypr-light2);
+    --text-primary: var(--color-hypr-dark);
+    --text-secondary: var(--color-neutral-500);
+    --text-muted: var(--color-neutral-400);
+    --border: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.15);
+    --accent: var(--color-teal-600);
+    --accent-hover: var(--color-teal-500);
+    --accent-muted: rgba(36, 108, 132, 0.06);
+    --accent-glow: rgba(36, 108, 132, 0.15);
+    --on-accent: #FFFFFF;
+    --overlay: rgba(0, 0, 0, 0.35);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  ::selection {
+    background-color: var(--accent-muted);
+    color: var(--accent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+}
+
+@layer utilities {
+  .glass {
+    background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
