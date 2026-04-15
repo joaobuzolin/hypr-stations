@@ -265,7 +265,7 @@ export default function RadioMap() {
 
   return (
     <AuthProvider>
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 h-full min-h-0 overflow-hidden">
         <aside
           aria-label="Filtros e lista de estações"
           className="hidden md:flex w-[300px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden"
