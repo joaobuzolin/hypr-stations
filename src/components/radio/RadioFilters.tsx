@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useId } from 'react';
 import MultiSelect from '../shared/MultiSelect';
 import ToggleGroup from '../shared/ToggleGroup';
 import { RADIO_COLORS } from '../../lib/constants';
@@ -25,6 +25,7 @@ const TYPE_OPTIONS = [
 ];
 
 export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) {
+  const uid = useId();
   const [filters, setFilters] = useState<RadioFilterState>({
     types: new Set(['FM', 'OM']),
     ufs: new Set(),
@@ -77,22 +78,21 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
     apply(fresh);
   }, [apply]);
 
-  // Count by type
-  const counts = useMemo(() => {
-    const fm = stations.filter(s => s.tipo === 'FM').length;
-    return { fm, om: stations.length - fm };
-  }, [stations]);
+  const cidadeId = `filter-cidade-${uid}`;
+  const entidadeId = `filter-entidade-${uid}`;
+  const nomeId = `filter-nome-${uid}`;
 
   return (
     <div className="flex flex-col border-b border-[var(--border)]">
-      {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
-        <h2 className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+        <h2 className="text-micro font-bold uppercase tracking-widest text-[var(--text-muted)]">
           Filtros
         </h2>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="text-[10px] px-2 py-1 rounded border bg-[var(--bg-surface2)]
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? 'Expandir filtros' : 'Recolher filtros'}
+          className="text-micro px-2 py-1 rounded-md border bg-[var(--bg-surface2)]
                      border-[var(--border)] text-[var(--text-muted)]
                      hover:border-[var(--accent)] hover:text-[var(--accent)]
                      transition-colors cursor-pointer"
@@ -101,24 +101,22 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
         </button>
       </div>
 
-      {/* Body */}
       <div
         className={`px-5 py-3 flex flex-col gap-3 transition-all duration-250 overflow-hidden
                     ${collapsed ? 'max-h-0 opacity-0 py-0' : 'max-h-[600px] opacity-100'}`}
       >
-        {/* Type toggle */}
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          <span className="text-micro font-medium uppercase tracking-wider text-[var(--text-muted)]">
             Tipo
           </span>
           <ToggleGroup
+            label="Tipo de estação"
             options={TYPE_OPTIONS}
             active={filters.types}
             onChange={(types) => update({ types })}
           />
         </div>
 
-        {/* UF */}
         <MultiSelect
           label="Estado (UF)"
           placeholder="Todos os estados"
@@ -127,12 +125,12 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
           onChange={(ufs) => update({ ufs })}
         />
 
-        {/* Cidade */}
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          <label htmlFor={cidadeId} className="text-micro font-medium uppercase tracking-wider text-[var(--text-muted)]">
             Cidade
-          </span>
+          </label>
           <input
+            id={cidadeId}
             type="text"
             value={filters.cidade}
             onChange={(e) => update({ cidade: e.target.value })}
@@ -144,7 +142,6 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
           />
         </div>
 
-        {/* Classe */}
         <MultiSelect
           label="Classe"
           placeholder="Todas as classes"
@@ -153,7 +150,6 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
           onChange={(classes) => update({ classes })}
         />
 
-        {/* Finalidade */}
         <MultiSelect
           label="Finalidade"
           placeholder="Todas"
@@ -163,12 +159,12 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
           searchable={false}
         />
 
-        {/* Entidade */}
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          <label htmlFor={entidadeId} className="text-micro font-medium uppercase tracking-wider text-[var(--text-muted)]">
             Entidade
-          </span>
+          </label>
           <input
+            id={entidadeId}
             type="text"
             value={filters.entidade}
             onChange={(e) => update({ entidade: e.target.value })}
@@ -180,12 +176,12 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
           />
         </div>
 
-        {/* Nome fantasia */}
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+          <label htmlFor={nomeId} className="text-micro font-medium uppercase tracking-wider text-[var(--text-muted)]">
             Nome da rádio
-          </span>
+          </label>
           <input
+            id={nomeId}
             type="text"
             value={filters.nome}
             onChange={(e) => update({ nome: e.target.value })}
@@ -197,7 +193,6 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
           />
         </div>
 
-        {/* Reset */}
         <button
           onClick={reset}
           className="w-full py-2 rounded-lg border text-xs
@@ -205,7 +200,7 @@ export default function RadioFilters({ stations, onFilter }: RadioFiltersProps) 
                      hover:border-[var(--accent)] hover:text-[var(--accent)]
                      transition-colors cursor-pointer"
         >
-          ↺ Limpar filtros
+          Limpar filtros
         </button>
       </div>
     </div>

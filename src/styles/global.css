@@ -1,8 +1,28 @@
 @import 'tailwindcss';
 
 /* ═══════════════════════════════════════════════════
-   HYPR Station — Design Tokens
-   Paleta oficial HYPR brand + extensões para Station
+   HYPR Station — Design Tokens v2
+   
+   ESCALA TIPOGRÁFICA (3 níveis abaixo de base):
+     --text-micro: 10px  → labels, badges, status
+     --text-sm:    12px  → body small, filter options, cards
+     --text-base:  14px  → body, frequencies, titles
+   
+   ESCALA DE ESPAÇAMENTO (Tailwind):
+     gap-1 (4px)   → inline elements (chips, icon+text)
+     gap-2 (8px)   → tight groups (actions, badges)
+     gap-3 (12px)  → default spacing (filter fields, list items)
+     gap-5 (20px)  → sections (card grid, hero blocks)
+   
+   BORDER RADIUS (3 níveis):
+     rounded-md  (6px)  → badges, chips, small controls
+     rounded-lg  (8px)  → inputs, buttons, dropdowns
+     rounded-xl  (12px) → cards, modals, overlays
+   
+   PADDING INTERNO:
+     px-4 (16px)  → compact (badges, chips)
+     px-5 (20px)  → sidebar sections, list items
+     px-6 (24px)  → header, full-width containers
    ═══════════════════════════════════════════════════ */
 
 @theme {
@@ -15,8 +35,8 @@
   --color-neutral-50: #F0F3F6;
   --color-neutral-100: #E5EBF2;
   --color-neutral-200: #C5CDD6;
-  --color-neutral-300: #78909C;
-  --color-neutral-400: #607D8B;
+  --color-neutral-300: #8D9DAA;
+  --color-neutral-400: #78909C;
   --color-neutral-500: #536872;
   --color-neutral-600: #3E4F59;
   --color-neutral-700: #2C3A44;
@@ -78,6 +98,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Dark mode (default) — contrast-safe values */
   html {
     color-scheme: dark;
     --bg: var(--color-hypr-dark);
@@ -86,8 +107,8 @@
     --text-primary: var(--color-hypr-light);
     --text-secondary: var(--color-neutral-300);
     --text-muted: var(--color-neutral-400);
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(255, 255, 255, 0.15);
+    --border: rgba(255, 255, 255, 0.10);
+    --border-hover: rgba(255, 255, 255, 0.18);
     --accent: var(--color-teal-400);
     --accent-hover: var(--color-teal-300);
     --accent-muted: rgba(51, 151, 185, 0.12);
@@ -96,6 +117,7 @@
     --overlay: rgba(0, 0, 0, 0.6);
   }
 
+  /* Light mode */
   html.light {
     color-scheme: light;
     --bg: var(--color-hypr-light);
@@ -104,8 +126,8 @@
     --text-primary: var(--color-hypr-dark);
     --text-secondary: var(--color-neutral-500);
     --text-muted: var(--color-neutral-400);
-    --border: rgba(0, 0, 0, 0.08);
-    --border-hover: rgba(0, 0, 0, 0.15);
+    --border: rgba(0, 0, 0, 0.10);
+    --border-hover: rgba(0, 0, 0, 0.18);
     --accent: var(--color-teal-600);
     --accent-hover: var(--color-teal-500);
     --accent-muted: rgba(36, 108, 132, 0.06);
@@ -142,6 +164,12 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
+
+  /* Micro text: 10px — labels, badges, status indicators */
+  .text-micro {
+    font-size: 10px;
+    line-height: 1.4;
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -151,7 +179,7 @@
 .maplibregl-popup-content {
   background: var(--bg-surface) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 14px !important;
+  border-radius: 12px !important;
   box-shadow: var(--shadow-modal) !important;
   padding: 0 !important;
 }
@@ -172,6 +200,7 @@
 .maplibregl-ctrl-group {
   background: var(--bg-surface) !important;
   border-color: var(--border) !important;
+  border-radius: 8px !important;
 }
 .maplibregl-ctrl-group button {
   background: var(--bg-surface) !important;

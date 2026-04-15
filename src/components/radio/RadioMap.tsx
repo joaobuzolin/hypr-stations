@@ -22,7 +22,6 @@ export default function RadioMap() {
   const mapRef = useRef<MLMap | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
 
-  // ── GeoJSON builder ──
   const buildGeoJSON = useCallback((data: RadioStation[]) => ({
     type: 'FeatureCollection' as const,
     features: data.filter(s => s.lat && s.lng).map((s, i) => ({
@@ -32,12 +31,10 @@ export default function RadioMap() {
     })),
   }), []);
 
-  // ── Map initialization ──
   const onMapReady = useCallback((map: MLMap) => {
     mapRef.current = map;
     const geojson = buildGeoJSON(filtered);
 
-    // Remove existing layers/source if re-initializing (theme change)
     ['cluster-count', 'clusters', 'points-fm', 'points-om'].forEach(id => {
       if (map.getLayer(id)) map.removeLayer(id);
     });
@@ -51,7 +48,6 @@ export default function RadioMap() {
       clusterRadius: 50,
     });
 
-    // Cluster circles
     map.addLayer({
       id: 'clusters',
       type: 'circle',
@@ -80,7 +76,6 @@ export default function RadioMap() {
       paint: { 'text-color': RADIO_COLORS.fm },
     });
 
-    // FM points
     map.addLayer({
       id: 'points-fm',
       type: 'circle',
@@ -95,7 +90,6 @@ export default function RadioMap() {
       },
     });
 
-    // AM/OM points
     map.addLayer({
       id: 'points-om',
       type: 'circle',
@@ -110,7 +104,6 @@ export default function RadioMap() {
       },
     });
 
-    // Click handlers
     map.on('click', 'clusters', (e) => {
       const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
       if (!features.length) return;
@@ -132,14 +125,13 @@ export default function RadioMap() {
       });
     });
 
-    // Cursor
     ['clusters', 'points-fm', 'points-om'].forEach(id => {
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     });
   }, [filtered, buildGeoJSON]);
 
-  // ── Popup ──
+  // Popup with consistent text sizes: text-micro (10px) for labels, text-xs (12px) for values
   const openPopup = useCallback((idx: number, coordinates: [number, number]) => {
     const s = filtered[idx];
     if (!s || !mapRef.current) return;
@@ -149,47 +141,52 @@ export default function RadioMap() {
     const radius = Math.round(estimateRadioRadius(erp, s.tipo));
     const aud = estimateRadioAudience(s.erp, s.tipo, s.classe, s.uf);
     const unit = s.tipo === 'FM' ? 'MHz' : 'kHz';
+    const accentColor = s.tipo === 'FM' ? RADIO_COLORS.fm : RADIO_COLORS.am;
+
+    const labelStyle = 'font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:2px';
+    const valueStyle = 'font-size:12px;font-weight:500;color:var(--text-primary)';
+    const cellStyle = 'background:var(--bg-surface2);border-radius:8px;padding:6px 10px';
 
     const html = `
-      <div style="padding:14px 18px;min-width:240px;font-family:Urbanist,sans-serif">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-          <div style="font-weight:800;font-size:22px;color:${s.tipo === 'FM' ? RADIO_COLORS.fm : RADIO_COLORS.am}">
-            ${s.frequencia} <span style="font-size:11px;font-weight:400;color:var(--text-muted)">${unit}</span>
+      <div style="padding:14px 16px;min-width:240px;font-family:Urbanist,sans-serif">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="font-weight:800;font-size:20px;color:${accentColor}">
+            ${s.frequencia} <span style="font-size:10px;font-weight:400;color:var(--text-muted)">${unit}</span>
           </div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text-primary)">${s.municipio} — ${s.uf}</div>
-            <div style="font-size:11px;color:var(--text-muted)">${s._fantasy || (s.tipo === 'FM' ? 'Rádio FM' : 'Rádio AM/OM')}</div>
+            <div style="font-size:12px;font-weight:700;color:var(--text-primary)">${s.municipio} — ${s.uf}</div>
+            <div style="font-size:10px;color:var(--text-muted)">${s._fantasy || (s.tipo === 'FM' ? 'Rádio FM' : 'Rádio AM/OM')}</div>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-          <div style="grid-column:1/-1;background:var(--bg-surface2);border-radius:8px;padding:6px 10px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Entidade</div>
-            <div style="font-size:11px;font-weight:500;color:var(--text-primary)">${s.entidade || '—'}</div>
+          <div style="grid-column:1/-1;${cellStyle}">
+            <div style="${labelStyle}">Entidade</div>
+            <div style="${valueStyle}">${s.entidade || '—'}</div>
           </div>
-          <div style="background:var(--bg-surface2);border-radius:8px;padding:6px 10px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Classe</div>
-            <div style="font-size:12px;font-weight:500;color:var(--text-primary)">${s.classe || '—'}</div>
+          <div style="${cellStyle}">
+            <div style="${labelStyle}">Classe</div>
+            <div style="${valueStyle}">${s.classe || '—'}</div>
           </div>
-          <div style="background:var(--bg-surface2);border-radius:8px;padding:6px 10px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">ERP / Alcance</div>
-            <div style="font-size:12px;font-weight:500;color:var(--text-primary)">${erp.toLocaleString('pt-BR')} W (~${radius} km)</div>
+          <div style="${cellStyle}">
+            <div style="${labelStyle}">ERP / Alcance</div>
+            <div style="${valueStyle}">${erp.toLocaleString('pt-BR')} W (~${radius} km)</div>
           </div>
-          <div style="background:var(--bg-surface2);border-radius:8px;padding:6px 10px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Finalidade</div>
-            <div style="font-size:12px;font-weight:500;color:var(--text-primary)">${s.finalidade || '—'}</div>
+          <div style="${cellStyle}">
+            <div style="${labelStyle}">Finalidade</div>
+            <div style="${valueStyle}">${s.finalidade || '—'}</div>
           </div>
-          <div style="background:var(--bg-surface2);border-radius:8px;padding:6px 10px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Caráter</div>
-            <div style="font-size:12px;font-weight:500;color:var(--text-primary)">${s.carater || '—'}</div>
+          <div style="${cellStyle}">
+            <div style="${labelStyle}">Caráter</div>
+            <div style="${valueStyle}">${s.carater || '—'}</div>
           </div>
         </div>
         ${aud > 0 ? `
-        <div style="background:var(--bg-surface2);border-radius:8px;padding:8px 10px;margin-top:8px;text-align:center">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Audiência Estimada</div>
+        <div style="${cellStyle};margin-top:8px;text-align:center">
+          <div style="${labelStyle}">Audiência estimada</div>
           <div style="font-weight:800;font-size:18px;color:var(--accent);margin-top:2px">${formatAudience(aud)} devices</div>
         </div>` : ''}
-        <div style="font-size:8px;color:var(--text-muted);text-align:center;margin-top:10px;opacity:0.6">
-          Modelo HYPR: alcance × densidade × penetração rádio × campanha 30d
+        <div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:10px">
+          Modelo HYPR: alcance × densidade × penetração × campanha 30d
         </div>
       </div>
     `;
@@ -208,18 +205,14 @@ export default function RadioMap() {
     popup.on('close', () => { popupRef.current = null; });
   }, [filtered]);
 
-  // ── Update map data when filters change ──
   const onFilter = useCallback((newFiltered: RadioStation[]) => {
     setFiltered(newFiltered);
     if (mapRef.current) {
       const src = mapRef.current.getSource('stations') as GeoJSONSource | undefined;
-      if (src) {
-        src.setData(buildGeoJSON(newFiltered));
-      }
+      if (src) src.setData(buildGeoJSON(newFiltered));
     }
   }, [buildGeoJSON]);
 
-  // ── Station focus ──
   const focusStation = useCallback((idx: number) => {
     const s = filtered[idx];
     if (!s || !s.lat || !s.lng || !mapRef.current) return;
@@ -232,7 +225,6 @@ export default function RadioMap() {
     setTimeout(() => openPopup(idx, [s.lng, s.lat]), 400);
   }, [filtered, openPopup]);
 
-  // ── Cart ──
   const toggleCart = useCallback((sid: number) => {
     setCart(prev => {
       const next = new Set(prev);
@@ -242,26 +234,42 @@ export default function RadioMap() {
     });
   }, []);
 
-  // ── Selection summary ──
+  const clearCart = useCallback(() => setCart(new Set()), []);
+
+  const selectAllFiltered = useCallback(() => {
+    setCart(prev => {
+      const next = new Set(prev);
+      filtered.forEach(s => next.add(s._sid));
+      return next;
+    });
+  }, [filtered]);
+
+  // Selection summary as ReactNode (no dangerouslySetInnerHTML)
   const selectionSummary = useMemo(() => {
-    if (cart.size === 0) return '';
+    if (cart.size === 0) return null;
     const selected = [...cart]
       .map(sid => allStations.find(s => s._sid === sid))
       .filter(Boolean) as RadioStation[];
     const totalAud = selected.reduce((s, e) => s + estimateRadioAudience(e.erp, e.tipo, e.classe, e.uf), 0);
     const ufs = [...new Set(selected.map(e => e.uf))];
-    return `<strong>${formatAudience(totalAud)}</strong> devices est. · ${ufs.length} UF${ufs.length > 1 ? 's' : ''}`;
+    return (
+      <span>
+        <strong className="text-[var(--text-primary)] font-semibold">{formatAudience(totalAud)}</strong>
+        {' '}devices est. · {ufs.length} UF{ufs.length > 1 ? 's' : ''}
+      </span>
+    );
   }, [cart]);
 
-  // Count FM/OM in filtered
   const fmCount = useMemo(() => filtered.filter(s => s.tipo === 'FM').length, [filtered]);
   const omCount = useMemo(() => filtered.length - fmCount, [filtered, fmCount]);
 
   return (
     <AuthProvider>
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar (desktop) */}
-        <aside className="hidden md:flex w-[300px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
+        <aside
+          aria-label="Filtros e lista de estações"
+          className="hidden md:flex w-[300px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden"
+        >
           <RadioFilters stations={allStations} onFilter={onFilter} />
           <StationList
             stations={filtered}
@@ -269,38 +277,38 @@ export default function RadioMap() {
             activeIdx={activeIdx}
             onFocus={focusStation}
             onToggleCart={toggleCart}
+            onClearCart={clearCart}
+            onSelectAll={selectAllFiltered}
             totalCount={filtered.length}
           />
         </aside>
 
-        {/* Map */}
         <MapContainer onMapReady={onMapReady}>
-          {/* Legend */}
           <div className="absolute bottom-5 right-5 z-10 rounded-xl border px-4 py-3 pointer-events-none
-                          bg-[var(--bg-surface)] border-[var(--border)]">
-            <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                          bg-[var(--bg-surface)] border-[var(--border)]"
+               aria-label="Legenda do mapa">
+            <div className="text-micro uppercase tracking-widest text-[var(--text-muted)] mb-2">
               Legenda
             </div>
             <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] mb-1">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: RADIO_COLORS.fm }} />
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: RADIO_COLORS.fm }} aria-hidden="true" />
               FM — {fmCount.toLocaleString('pt-BR')}
             </div>
             <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] mb-2">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: RADIO_COLORS.am }} />
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: RADIO_COLORS.am }} aria-hidden="true" />
               AM/OM — {omCount.toLocaleString('pt-BR')}
             </div>
-            <div className="text-[8px] text-[var(--text-muted)] opacity-60">
+            <div className="text-micro text-[var(--text-muted)]">
               Fonte: Anatel/SRD · 2026
             </div>
           </div>
         </MapContainer>
       </div>
 
-      {/* Selection bar */}
       <SelectionBar
         count={cart.size}
         summary={selectionSummary}
-        onCheckout={() => {/* TODO: Phase 5 */}}
+        onCheckout={() => {/* Phase 5 */}}
         canDownload={false}
       />
     </AuthProvider>
