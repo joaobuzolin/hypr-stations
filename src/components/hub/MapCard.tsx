@@ -17,7 +17,7 @@ const STATUS_LABELS: Record<MapStatus, string> = {
 };
 
 function MapIcon({ icon }: { icon: string }) {
-  const cls = "w-8 h-8";
+  const cls = "w-7 h-7";
   const props = { className: cls, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, 'aria-hidden': true as const };
 
   switch (icon) {
@@ -54,66 +54,74 @@ export default function MapCard({ name, subtitle, description, icon, href, statu
   const isActive = status === 'active';
 
   const content = (
-    <div className={`group relative flex flex-col h-full p-5 rounded-xl border
+    <div className={`group flex flex-col h-full p-6 rounded-xl border
                      transition-all duration-300
                      ${isActive
                        ? 'border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--accent)] hover:shadow-[var(--shadow-card-hover)] cursor-pointer'
                        : 'border-[var(--border)] bg-[var(--bg-surface)] opacity-50 cursor-default'
                      }`}>
 
-      {!isActive && (
-        <span className="absolute top-3 right-3 text-micro font-semibold uppercase tracking-wider
-                         px-2 py-0.5 rounded-md
-                         bg-[var(--accent-muted)] text-[var(--accent)]">
-          {STATUS_LABELS[status]}
-        </span>
-      )}
+      {/* Top row: icon + status badge */}
+      <div className="flex items-start justify-between mb-5">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center
+                         transition-colors duration-300
+                         ${isActive
+                           ? 'bg-[var(--accent-muted)] text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]'
+                           : 'bg-[var(--bg-surface2)] text-[var(--text-muted)]'
+                         }`}>
+          <MapIcon icon={icon} />
+        </div>
 
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3
-                       transition-colors duration-300
-                       ${isActive
-                         ? 'bg-[var(--accent-muted)] text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]'
-                         : 'bg-[var(--bg-surface2)] text-[var(--text-muted)]'
-                       }`}>
-        <MapIcon icon={icon} />
+        {!isActive && (
+          <span className="text-micro font-semibold uppercase tracking-wider
+                           px-2.5 py-1 rounded-md
+                           bg-[var(--accent-muted)] text-[var(--accent)]">
+            {STATUS_LABELS[status]}
+          </span>
+        )}
       </div>
 
+      {/* Title + subtitle */}
       <h2 className="font-heading text-lg font-bold text-[var(--text-primary)] mb-1">
         {name}
       </h2>
-      <p className="text-micro font-medium uppercase tracking-wider text-[var(--text-muted)] mb-3">
+      <p className="text-micro font-medium uppercase tracking-wider text-[var(--text-muted)] mb-4">
         {subtitle}
       </p>
 
-      <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-5 flex-1">
+      {/* Description */}
+      <p className="text-xs text-[var(--text-secondary)] leading-relaxed flex-1 mb-6">
         {description}
       </p>
 
-      <div className={`flex gap-5 pt-3 border-t border-[var(--border)] ${isActive ? 'pr-12' : ''}`}>
-        {Object.entries(stats).map(([key, val]) => (
-          <div key={key} className="flex flex-col">
-            <span className={`text-xs font-bold ${isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}>
-              {val}
-            </span>
-            <span className="text-micro uppercase tracking-wider text-[var(--text-muted)]">
-              {key === 'stations' ? 'Estações' : key === 'types' ? 'Tipos' : 'Fonte'}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {isActive && (
-        <div className="absolute bottom-5 right-5 w-8 h-8 rounded-lg
-                        flex items-center justify-center
-                        bg-[var(--bg-surface2)] text-[var(--text-muted)]
-                        group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]
-                        transition-all duration-300 group-hover:translate-x-0.5"
-             aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-          </svg>
+      {/* Stats row */}
+      <div className="flex items-end justify-between pt-4 border-t border-[var(--border)]">
+        <div className="flex gap-6">
+          {Object.entries(stats).map(([key, val]) => (
+            <div key={key} className="flex flex-col gap-0.5">
+              <span className={`text-xs font-bold ${isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}>
+                {val}
+              </span>
+              <span className="text-micro uppercase tracking-wider text-[var(--text-muted)]">
+                {key === 'stations' ? 'Estações' : key === 'types' ? 'Tipos' : 'Fonte'}
+              </span>
+            </div>
+          ))}
         </div>
-      )}
+
+        {/* Arrow */}
+        {isActive && (
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0
+                          bg-[var(--bg-surface2)] text-[var(--text-muted)]
+                          group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]
+                          transition-all duration-300 group-hover:translate-x-0.5"
+               aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        )}
+      </div>
     </div>
   );
 
