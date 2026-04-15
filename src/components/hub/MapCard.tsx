@@ -89,7 +89,7 @@ export default function MapCard({ name, subtitle, description, icon, href, statu
         {description}
       </p>
 
-      <div className="flex gap-5 pt-3 border-t border-[var(--border)]">
+      <div className={`flex gap-5 pt-3 border-t border-[var(--border)] ${isActive ? 'pr-12' : ''}`}>
         {Object.entries(stats).map(([key, val]) => (
           <div key={key} className="flex flex-col">
             <span className={`text-xs font-bold ${isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}>
