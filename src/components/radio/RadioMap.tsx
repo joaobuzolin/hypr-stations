@@ -156,7 +156,7 @@ export default function RadioMap() {
     <div className="flex flex-1 h-full min-h-0 overflow-hidden">
       {/* Sidebar — 200px like original */}
       <aside aria-label="Filtros e estações"
-        className="hidden md:flex w-[200px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
+        className="hidden md:flex w-[240px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
         <RadioFilters stations={allStations} onFilter={onFilter} />
         <StationList stations={filtered} cart={cart} activeIdx={activeIdx} onFocus={focusStation}
           onToggleCart={toggleCart} onClearCart={clearCart} onSelectAll={selectAll} totalCount={filtered.length} />
