@@ -9,32 +9,31 @@ import { MAPS } from '../lib/constants';
   <div class="min-h-screen flex flex-col">
     <Header client:load currentPage="/" />
 
-    <main class="flex-1 flex flex-col items-center justify-center px-6 py-16">
-      <div class="text-center mb-12 max-w-xl">
-        <h1 class="font-heading text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-3">
+    <main class="flex-1 flex flex-col items-center justify-center px-6 py-20">
+      <div class="text-center mb-14 max-w-md">
+        <h1 class="font-heading text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-3">
           O que você quer explorar?
         </h1>
-        <p class="text-sm text-[var(--text-secondary)] leading-relaxed">
-          Escolha um mapa de cobertura para visualizar estações, filtrar por região e montar planos de mídia.
+        <p class="text-xs text-[var(--text-muted)] leading-relaxed">
+          Escolha um mapa de cobertura para começar. Visualize estações, filtre por região e monte planos de mídia.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-4xl">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl">
         {Object.values(MAPS).map((map) => (
           <MapCard
             client:load
             name={map.name}
-            subtitle={map.subtitle}
+            subtitle={map.description}
             description={map.description}
             icon={map.icon}
             href={map.href}
             status={map.status}
-            stats={map.stats}
           />
         ))}
       </div>
 
-      <p class="mt-12 text-xs text-[var(--text-muted)] text-center">
+      <p class="mt-14 text-micro text-[var(--text-muted)] text-center">
         Dados públicos Anatel · Uso interno HYPR
       </p>
     </main>

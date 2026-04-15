@@ -7,7 +7,6 @@ interface MapCardProps {
   icon: string;
   href: string;
   status: MapStatus;
-  stats: { stations: string; types: string; source: string };
 }
 
 const STATUS_LABELS: Record<MapStatus, string> = {
@@ -17,111 +16,71 @@ const STATUS_LABELS: Record<MapStatus, string> = {
 };
 
 function MapIcon({ icon }: { icon: string }) {
-  const cls = "w-7 h-7";
-  const props = { className: cls, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, 'aria-hidden': true as const };
-
+  const props = { className: "w-6 h-6", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, 'aria-hidden': true as const };
   switch (icon) {
     case 'radio':
-      return (
-        <svg {...props}>
-          <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
-          <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4" />
-          <circle cx="12" cy="12" r="2" />
-          <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4" />
-          <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19" />
-        </svg>
-      );
+      return (<svg {...props}><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" /><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.4" /><circle cx="12" cy="12" r="2" /><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.4" /><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19" /></svg>);
     case 'signal':
-      return (
-        <svg {...props}>
-          <path d="M2 20h.01" /><path d="M7 20v-4" /><path d="M12 20v-8" />
-          <path d="M17 20V8" /><path d="M22 4v16" />
-        </svg>
-      );
+      return (<svg {...props}><path d="M2 20h.01" /><path d="M7 20v-4" /><path d="M12 20v-8" /><path d="M17 20V8" /><path d="M22 4v16" /></svg>);
     case 'tv':
-      return (
-        <svg {...props}>
-          <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
-          <polyline points="17 2 12 7 7 2" />
-        </svg>
-      );
+      return (<svg {...props}><rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" /></svg>);
     default:
       return null;
   }
 }
 
-export default function MapCard({ name, subtitle, description, icon, href, status, stats }: MapCardProps) {
+export default function MapCard({ name, subtitle, description, icon, href, status }: MapCardProps) {
   const isActive = status === 'active';
 
   const content = (
-    <div className={`group flex flex-col h-full p-6 rounded-xl border
-                     transition-all duration-300
+    <div className={`group flex flex-col items-center text-center h-full
+                     px-8 py-10 rounded-xl border transition-all duration-300
                      ${isActive
                        ? 'border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--accent)] hover:shadow-[var(--shadow-card-hover)] cursor-pointer'
-                       : 'border-[var(--border)] bg-[var(--bg-surface)] opacity-50 cursor-default'
+                       : 'border-[var(--border)] bg-[var(--bg-surface)] opacity-40 cursor-default'
                      }`}>
 
-      {/* Top row: icon + status badge */}
-      <div className="flex items-start justify-between mb-5">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center
-                         transition-colors duration-300
-                         ${isActive
-                           ? 'bg-[var(--accent-muted)] text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]'
-                           : 'bg-[var(--bg-surface2)] text-[var(--text-muted)]'
-                         }`}>
-          <MapIcon icon={icon} />
-        </div>
-
-        {!isActive && (
-          <span className="text-micro font-semibold uppercase tracking-wider
-                           px-2.5 py-1 rounded-md
-                           bg-[var(--accent-muted)] text-[var(--accent)]">
-            {STATUS_LABELS[status]}
-          </span>
-        )}
+      {/* Icon */}
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5
+                       transition-colors duration-300
+                       ${isActive
+                         ? 'bg-[var(--accent-muted)] text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]'
+                         : 'bg-[var(--bg-surface2)] text-[var(--text-muted)]'
+                       }`}>
+        <MapIcon icon={icon} />
       </div>
 
-      {/* Title + subtitle */}
-      <h2 className="font-heading text-lg font-bold text-[var(--text-primary)] mb-1">
+      {/* Title */}
+      <h2 className="font-heading text-base font-bold text-[var(--text-primary)] mb-2">
         {name}
       </h2>
-      <p className="text-micro font-medium uppercase tracking-wider text-[var(--text-muted)] mb-4">
+
+      {/* Description */}
+      <p className="text-xs text-[var(--text-muted)] leading-relaxed max-w-[200px]">
         {subtitle}
       </p>
 
-      {/* Description */}
-      <p className="text-xs text-[var(--text-secondary)] leading-relaxed flex-1 mb-6">
-        {description}
-      </p>
+      {/* Status badge for inactive */}
+      {!isActive && (
+        <span className="mt-5 text-micro font-semibold uppercase tracking-wider
+                         px-3 py-1 rounded-lg
+                         bg-[var(--accent-muted)] text-[var(--accent)]">
+          {STATUS_LABELS[status]}
+        </span>
+      )}
 
-      {/* Stats row */}
-      <div className="flex items-end justify-between pt-4 border-t border-[var(--border)]">
-        <div className="flex gap-6">
-          {Object.entries(stats).map(([key, val]) => (
-            <div key={key} className="flex flex-col gap-0.5">
-              <span className={`text-xs font-bold ${isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`}>
-                {val}
-              </span>
-              <span className="text-micro uppercase tracking-wider text-[var(--text-muted)]">
-                {key === 'stations' ? 'Estações' : key === 'types' ? 'Tipos' : 'Fonte'}
-              </span>
-            </div>
-          ))}
+      {/* Arrow for active */}
+      {isActive && (
+        <div className="mt-5 w-7 h-7 rounded-lg flex items-center justify-center
+                        bg-[var(--bg-surface2)] text-[var(--text-muted)]
+                        group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]
+                        transition-all duration-300"
+             aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+          </svg>
         </div>
-
-        {/* Arrow */}
-        {isActive && (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0
-                          bg-[var(--bg-surface2)] text-[var(--text-muted)]
-                          group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)]
-                          transition-all duration-300 group-hover:translate-x-0.5"
-               aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-            </svg>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 
