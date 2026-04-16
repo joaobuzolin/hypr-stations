@@ -22,3 +22,12 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# ETL data files
+scripts/anatel_smp_raw.csv
+scripts/ibge_municipios.csv
+scripts/erb_all.json
+scripts/erb_processed.json
+scripts/batch_*.sql
+scripts/mega_batches/
+.env
