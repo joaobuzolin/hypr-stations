@@ -42,32 +42,32 @@ export const MAPS = {
 export type MapId = keyof typeof MAPS;
 export type MapStatus = 'active' | 'coming-soon' | 'planned';
 
-// Operadora colors (Cell Map)
+// Operadora colors (V3 — desaturated, elegant)
 export const OPERADORA_COLORS: Record<string, string> = {
-  'Vivo': '#7B3FA0',
-  'Claro': '#C32E07',
-  'TIM': '#2196F3',
-  'Brisanet': '#076783',
-  'Algar': '#018376',
-  'Unifique': '#4CB050',
-  'Sercomtel': '#EDD900',
-  'Outras': '#5F4237',
+  'Vivo': '#9b6fc0',
+  'Claro': '#e07050',
+  'TIM': '#5ba3e6',
+  'Brisanet': '#3a9aab',
+  'Algar': '#3aab8c',
+  'Unifique': '#6aba6e',
+  'Sercomtel': '#d4c74a',
+  'Outras': '#7a6e64',
 };
 
-// Technology colors (Cell Map)
+// Technology colors (V3 — softer)
 export const TECH_COLORS: Record<string, string> = {
-  '5G': '#F5272B',
-  '4G': '#3397B9',
-  '3G': '#EDD900',
-  '2G': '#78909C',
+  '5G': '#e85454',
+  '4G': '#4db8d4',
+  '3G': '#d4c74a',
+  '2G': '#576773',
 };
 
-// Radio Map colors
+// Radio Map colors (V3)
 export const RADIO_COLORS = {
-  fm: '#3397B9',  // teal accent
-  am: '#EDD900',  // gold
-  fmBg: 'rgba(51, 151, 185, 0.15)',
-  amBg: 'rgba(237, 217, 0, 0.15)',
+  fm: '#4db8d4',
+  am: '#d4c74a',
+  fmBg: 'rgba(77, 184, 212, 0.07)',
+  amBg: 'rgba(212, 199, 74, 0.07)',
 };
 
 // Google OAuth

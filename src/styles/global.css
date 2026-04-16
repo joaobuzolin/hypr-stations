@@ -1,80 +1,94 @@
 @import 'tailwindcss';
 
 /* ═══════════════════════════════════════════════════
-   HYPR Station — Design Tokens v2
-   
-   ESCALA TIPOGRÁFICA (3 níveis abaixo de base):
-     --text-micro: 10px  → labels, badges, status
-     --text-sm:    12px  → body small, filter options, cards
-     --text-base:  14px  → body, frequencies, titles
-   
-   ESCALA DE ESPAÇAMENTO (Tailwind):
-     gap-1 (4px)   → inline elements (chips, icon+text)
-     gap-2 (8px)   → tight groups (actions, badges)
-     gap-3 (12px)  → default spacing (filter fields, list items)
-     gap-5 (20px)  → sections (card grid, hero blocks)
-   
-   BORDER RADIUS (3 níveis):
-     rounded-md  (6px)  → badges, chips, small controls
-     rounded-lg  (8px)  → inputs, buttons, dropdowns
-     rounded-xl  (12px) → cards, modals, overlays
-   
-   PADDING INTERNO:
-     px-4 (16px)  → compact (badges, chips)
-     px-5 (20px)  → sidebar sections, list items
-     px-6 (24px)  → header, full-width containers
+   HYPR Station — Design Tokens v3
+
+   TYPOGRAPHY (4 sizes):
+     11px  → labels, badges, captions, metadata
+     13px  → body small, filter options, descriptions
+     15px  → body, card titles, section titles
+     20px+ → page headings, stat values
+
+   FONT WEIGHTS (3 levels):
+     400 → body text, descriptions
+     500 → labels, metadata, subtle emphasis
+     600 → titles, values, buttons, strong emphasis
+
+   SPACING:
+     18-20px   → sidebar section padding
+     26-28px   → card body padding
+     6px       → inline chips/badges gap
+     10px      → form fields gap
+     14px      → card/stat grid gap
+
+   BORDER RADIUS (3 levels):
+     6px   → badges, chips, tech tags
+     8-10px → inputs, buttons, overlay panels
+     14px  → cards, modals, popups
+
    ═══════════════════════════════════════════════════ */
 
 @theme {
-  --color-hypr-dark: #1C262F;
-  --color-hypr-surface: #22303B;
-  --color-hypr-surface2: #2A3A47;
-  --color-hypr-light: #FCFEFE;
-  --color-hypr-light2: #F4F7FA;
+  --color-hypr-dark: #0f1419;
+  --color-hypr-surface: #161d24;
+  --color-hypr-surface2: #1c252e;
+  --color-hypr-surface3: #243039;
+  --color-hypr-light: #f8fafb;
+  --color-hypr-light2: #f0f3f6;
 
-  --color-neutral-50: #F0F3F6;
-  --color-neutral-100: #E5EBF2;
-  --color-neutral-200: #C5CDD6;
-  --color-neutral-300: #8D9DAA;
-  --color-neutral-400: #78909C;
-  --color-neutral-500: #536872;
-  --color-neutral-600: #3E4F59;
-  --color-neutral-700: #2C3A44;
-  --color-neutral-800: #1E2A33;
+  --color-neutral-50: #f0f3f6;
+  --color-neutral-100: #e2e7ec;
+  --color-neutral-200: #c5cdd6;
+  --color-neutral-300: #8899a6;
+  --color-neutral-400: #576773;
+  --color-neutral-500: #3d4d58;
+  --color-neutral-600: #2c3a44;
+  --color-neutral-700: #1e2a33;
+  --color-neutral-800: #151c23;
 
-  --color-teal-100: #E0F4FB;
-  --color-teal-200: #C5EAF6;
-  --color-teal-300: #7ACCE5;
-  --color-teal-400: #3397B9;
-  --color-teal-500: #2A7F9E;
-  --color-teal-600: #246C84;
-  --color-teal-700: #1A5468;
-  --color-teal-800: #12404F;
+  --color-teal-50: #e6f6fb;
+  --color-teal-100: #c0eaf5;
+  --color-teal-200: #8ad7eb;
+  --color-teal-300: #4db8d4;
+  --color-teal-400: #3a9ab8;
+  --color-teal-500: #2a7f9e;
+  --color-teal-600: #1f6680;
+  --color-teal-700: #164e63;
+  --color-teal-800: #0e3849;
 
-  --color-gold-100: #FFF9D6;
-  --color-gold-200: #F6F0A9;
-  --color-gold-400: #EDD900;
-  --color-gold-600: #B1A300;
-  --color-gold-800: #7A7000;
+  --color-gold-50: #fdf8e8;
+  --color-gold-100: #f5ecc0;
+  --color-gold-200: #e8dd80;
+  --color-gold-400: #d4c74a;
+  --color-gold-600: #a89c30;
+  --color-gold-800: #6e6618;
 
-  --color-red-100: #FFEBEB;
-  --color-red-200: #FFBEBF;
-  --color-red-400: #F5272B;
-  --color-red-600: #B11C1F;
-  --color-red-800: #7A1315;
+  --color-red-50: #fdf0f0;
+  --color-red-100: #f8d4d4;
+  --color-red-200: #f0a8a8;
+  --color-red-400: #e85454;
+  --color-red-600: #b83a3a;
+  --color-red-800: #7a2020;
 
-  --color-op-vivo: #7B3FA0;
-  --color-op-claro: #C32E07;
-  --color-op-tim: #2196F3;
-  --color-op-brisanet: #076783;
-  --color-op-algar: #018376;
-  --color-op-unifique: #4CB050;
-  --color-op-other: #5F4237;
+  --color-green-400: #5cb87a;
+  --color-green-600: #3d8a56;
 
-  --color-tech-5g: #F5272B;
-  --color-tech-4g: #3397B9;
-  --color-tech-3g: #EDD900;
-  --color-tech-2g: #78909C;
+  --color-op-vivo: #9b6fc0;
+  --color-op-claro: #e07050;
+  --color-op-tim: #5ba3e6;
+  --color-op-brisanet: #3a9aab;
+  --color-op-algar: #3aab8c;
+  --color-op-unifique: #6aba6e;
+  --color-op-sercomtel: #d4c74a;
+  --color-op-other: #7a6e64;
+
+  --color-tech-5g: #e85454;
+  --color-tech-4g: #4db8d4;
+  --color-tech-3g: #d4c74a;
+  --color-tech-2g: #576773;
+
+  --color-radio-fm: #4db8d4;
+  --color-radio-am: #d4c74a;
 
   --font-heading: 'Urbanist', system-ui, sans-serif;
   --font-body: 'Urbanist', system-ui, sans-serif;
@@ -84,11 +98,8 @@
   --spacing-88: 22rem;
   --spacing-120: 30rem;
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.12), 0 8px 32px rgba(0, 0, 0, 0.06);
-  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.3);
-
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @layer base {
@@ -98,48 +109,60 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Dark mode (default) — contrast-safe values */
   html {
     color-scheme: dark;
     --bg: var(--color-hypr-dark);
     --bg-surface: var(--color-hypr-surface);
     --bg-surface2: var(--color-hypr-surface2);
-    --text-primary: var(--color-hypr-light);
+    --bg-surface3: var(--color-hypr-surface3);
+    --text-primary: #e8ecf0;
     --text-secondary: var(--color-neutral-300);
     --text-muted: var(--color-neutral-400);
-    --border: rgba(255, 255, 255, 0.10);
-    --border-hover: rgba(255, 255, 255, 0.18);
-    --accent: var(--color-teal-400);
-    --accent-hover: var(--color-teal-300);
-    --accent-muted: rgba(51, 151, 185, 0.12);
-    --accent-glow: rgba(51, 151, 185, 0.3);
+    --text-faint: var(--color-neutral-500);
+    --border: rgba(255, 255, 255, 0.05);
+    --border-hover: rgba(255, 255, 255, 0.08);
+    --border-active: rgba(255, 255, 255, 0.12);
+    --accent: var(--color-teal-300);
+    --accent-hover: var(--color-teal-200);
+    --accent-dim: var(--color-teal-400);
+    --accent-muted: rgba(77, 184, 212, 0.08);
+    --accent-glow: rgba(77, 184, 212, 0.20);
     --on-accent: #000000;
-    --overlay: rgba(0, 0, 0, 0.6);
+    --overlay: rgba(0, 0, 0, 0.55);
+    --overlay-panel: rgba(22, 29, 36, 0.95);
+    /* V2 compat — remove after migration */
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
 
-  /* Light mode */
   html.light {
     color-scheme: light;
     --bg: var(--color-hypr-light);
-    --bg-surface: #FFFFFF;
+    --bg-surface: #ffffff;
     --bg-surface2: var(--color-hypr-light2);
-    --text-primary: var(--color-hypr-dark);
-    --text-secondary: var(--color-neutral-500);
-    --text-muted: var(--color-neutral-400);
-    --border: rgba(0, 0, 0, 0.10);
-    --border-hover: rgba(0, 0, 0, 0.18);
-    --accent: var(--color-teal-600);
-    --accent-hover: var(--color-teal-500);
-    --accent-muted: rgba(36, 108, 132, 0.06);
-    --accent-glow: rgba(36, 108, 132, 0.15);
-    --on-accent: #FFFFFF;
-    --overlay: rgba(0, 0, 0, 0.35);
+    --bg-surface3: #e8edf2;
+    --text-primary: #1a2530;
+    --text-secondary: var(--color-neutral-400);
+    --text-muted: var(--color-neutral-300);
+    --text-faint: var(--color-neutral-200);
+    --border: rgba(0, 0, 0, 0.06);
+    --border-hover: rgba(0, 0, 0, 0.10);
+    --border-active: rgba(0, 0, 0, 0.15);
+    --accent: var(--color-teal-500);
+    --accent-hover: var(--color-teal-400);
+    --accent-dim: var(--color-teal-600);
+    --accent-muted: rgba(42, 127, 158, 0.06);
+    --accent-glow: rgba(42, 127, 158, 0.12);
+    --on-accent: #ffffff;
+    --overlay: rgba(0, 0, 0, 0.30);
+    --overlay-panel: rgba(255, 255, 255, 0.95);
+    /* V2 compat — remove after migration */
+    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
   }
 
   body {
     background-color: var(--bg);
     color: var(--text-primary);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::selection {
@@ -154,22 +177,64 @@
 
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-active); }
 }
 
 @layer utilities {
-  .glass {
-    background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+  .text-label {
+    font-size: 11px;
+    line-height: 1.45;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
   }
 
-  /* Micro text: 10px — labels, badges, status indicators */
+  /* V2 compat — will be removed after full migration */
   .text-micro {
-    font-size: 10px;
-    line-height: 1.4;
+    font-size: 11px;
+    line-height: 1.45;
   }
+
+  .overlay-panel {
+    background: var(--overlay-panel);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════════ */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes barIn {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -178,42 +243,49 @@
 
 .maplibregl-popup-content {
   background: var(--bg-surface) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 12px !important;
-  box-shadow: var(--shadow-modal) !important;
+  border: 0.5px solid var(--border) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25) !important;
   padding: 0 !important;
+  overflow: hidden !important;
 }
 
 .maplibregl-popup-tip { display: none !important; }
 
 .maplibregl-popup-close-button {
   color: var(--text-muted) !important;
-  top: 10px !important;
+  top: 12px !important;
   right: 12px !important;
-  font-size: 18px !important;
-  background: none !important;
+  font-size: 14px !important;
+  width: 26px !important;
+  height: 26px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--bg-surface2) !important;
   border: none !important;
+  border-radius: 8px !important;
   cursor: pointer !important;
+  transition: all 0.15s ease !important;
 }
-.maplibregl-popup-close-button:hover { color: var(--text-primary) !important; }
+.maplibregl-popup-close-button:hover {
+  color: var(--text-primary) !important;
+  background: var(--bg-surface3) !important;
+}
 
 .maplibregl-ctrl-group {
-  background: var(--bg-surface) !important;
-  border-color: var(--border) !important;
-  border-radius: 8px !important;
+  background: var(--overlay-panel) !important;
+  border: 0.5px solid var(--border) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
 }
 .maplibregl-ctrl-group button {
-  background: var(--bg-surface) !important;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  transition: all 0.15s ease !important;
+}
+.maplibregl-ctrl-group button:hover {
+  background: var(--bg-surface2) !important;
   color: var(--text-primary) !important;
 }
-.maplibregl-ctrl-group button:hover { background: var(--bg-surface2) !important; }
 .maplibregl-ctrl-attrib { display: none !important; }
-
-/* ═══════════════════════════════════════════════════
-   Animations
-   ═══════════════════════════════════════════════════ */
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
