@@ -106,15 +106,19 @@ export function addDominanceLayer(map: MLMap, opts: DominanceOptions = {}) {
       let opacity: number;
 
       if (focusOp) {
-        // Focus mode: green if focusOp dominates, red if competitor dominates
         const myCount = h.o[focusOp] || 0;
-        const othersCount = h.t - myCount;
-        if (myCount >= othersCount) {
-          color = '#5cb87a'; // green — winning
-          opacity = h.t > 0 ? Math.min(0.15 + (myCount / h.t) * 0.5, 0.65) : 0.1;
+        const isDominant = h.d === focusOp;
+        const strength = h.t > 0 ? myCount / h.t : 0;
+
+        if (isDominant) {
+          color = '#5cb87a'; // green — this operator dominates here
+          opacity = Math.min(0.2 + strength * 0.5, 0.65);
+        } else if (myCount > 0) {
+          color = '#e88a4a'; // amber — present but not dominant
+          opacity = Math.min(0.1 + strength * 0.3, 0.35);
         } else {
-          color = '#e85454'; // red — losing
-          opacity = h.t > 0 ? Math.min(0.15 + (othersCount / h.t) * 0.4, 0.55) : 0.1;
+          color = '#e85454'; // red — not present at all
+          opacity = 0.2;
         }
       } else {
         // General mode: color by dominant operator
@@ -224,20 +228,21 @@ export function getDominanceStats(techFilter: 'all' | '5G' | '4G' = 'all', resol
 export function getOperatorFocusStats(op: string, techFilter: 'all' | '5G' | '4G' = 'all', resolution = 'r4') {
   if (!_domData) return null;
   const hexes = _domData[techFilter]?.[resolution] || [];
-  let wins = 0, losses = 0, totalRegs = hexes.length;
+  let wins = 0, contested = 0, absent = 0;
   let topRival = '', topRivalGap = 0;
 
   for (const h of hexes) {
     const myCount = h.o[op] || 0;
-    if (myCount > 0 && h.d === op) wins++;
-    else if (myCount === 0 || h.d !== op) losses++;
+    if (h.d === op) wins++;
+    else if (myCount > 0) contested++;
+    else absent++;
 
-    // Find top rival in regions where this op loses
     if (h.d !== op && h.o[h.d]) {
       const gap = (h.o[h.d] || 0) - myCount;
       if (gap > topRivalGap) { topRival = h.d; topRivalGap = gap; }
     }
   }
 
-  return { wins, losses, totalRegs, topRival, topRivalGap, pctDomination: totalRegs > 0 ? Math.round(wins / totalRegs * 100) : 0 };
+  const totalRegs = hexes.length;
+  return { wins, contested, absent, totalRegs, topRival, topRivalGap, pctDomination: totalRegs > 0 ? Math.round(wins / totalRegs * 100) : 0 };
 }
