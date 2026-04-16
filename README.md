@@ -2,15 +2,15 @@
 
 Plataforma de mapas de cobertura de mídia — rádio, celular e TV.
 
-**URL:** `station.hypr.mobi`
+**URL:** `stations.hypr.mobi`
 
 ## Stack
 
-- **Astro 5** — meta-framework, static pages + selective hydration
+- **Astro 6** — meta-framework, static pages + selective hydration
 - **React 19** — interactive islands (maps, filters, checkout)
 - **Tailwind CSS v4** — styling com design tokens HYPR
 - **MapLibre GL JS** — renderização de mapas
-- **Supabase** — dados ERBs (Cell Map), auth, RLS
+- **Supabase** — dados ERBs (Cell Map)
 - **Vercel** — deploy, domínio, preview branches
 
 ## Estrutura
@@ -20,13 +20,21 @@ src/
 ├── layouts/         Astro layouts (BaseLayout)
 ├── pages/           Rotas (index, radio, cell)
 ├── components/
-│   ├── shared/      Header, ThemeToggle, Auth, Checkout, MultiSelect
-│   ├── hub/         MapCard (landing page)
-│   ├── radio/       RadioMap island + filtros + dados
-│   └── cell/        CellMap island + filtros + API
-├── lib/             Supabase client, constants, helpers
-└── styles/          Tailwind global + design tokens
+│   ├── shared/      Header, ThemeToggle, Auth, Checkout, MultiSelect,
+│   │                ToggleGroup, SelectionBar, MapContainer, LoginButton
+│   ├── hub/         MapCard, HubSearch, HubStats
+│   ├── radio/       RadioMap, RadioFilters, StationList, radioData
+│   └── cell/        CellMap, CellFilters, CellStationList, ViewModeSelector,
+│                    DominancePanel, analysisLayers, coverageLayer, cellData
+├── lib/             Supabase client, constants, audience helpers
+└── styles/          global.css (Tailwind + design tokens V3)
 ```
+
+## Design System V3
+
+Paleta dark-first com cores dessaturadas. Escala tipográfica em 4 tamanhos primários (11/13/15/20px). Border-radius em 5 níveis (5-6/8/10/12/14px). Animações de entrada (fadeUp, slideIn, barIn, dotPulse).
+
+Tokens definidos em `src/styles/global.css` via `@theme`. Cores de operadora e tecnologia em `src/lib/constants.ts`.
 
 ## Dev
 
@@ -39,12 +47,4 @@ npm run preview    # preview build
 
 ## Deploy
 
-Push para `main` → Vercel auto-deploy em `station.hypr.mobi`.
-
-## Roadmap
-
-- [x] Fase 1 — Scaffold Astro + design tokens + hub
-- [ ] Fase 2 — Shared components (Auth, Checkout)
-- [ ] Fase 3 — Radio Map migration (React island)
-- [ ] Fase 4 — Cell Map (ETL Anatel + Supabase + mapa)
-- [ ] Fase 5 — Polish + launch
+Push para `main` → Vercel auto-deploy em `stations.hypr.mobi`.
