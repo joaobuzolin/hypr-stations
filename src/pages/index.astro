@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/shared/Header';
-import HubSearch from '../components/hub/HubSearch';
 import HubStats from '../components/hub/HubStats';
 import MapCard from '../components/hub/MapCard';
 import { MAPS } from '../lib/constants';
@@ -19,17 +18,12 @@ import { MAPS } from '../lib/constants';
           <h1 class="font-heading text-[26px] font-semibold text-[var(--text-primary)] mb-2.5 leading-[1.35] tracking-[-0.01em]">
             Explore a cobertura de <span class="text-[var(--accent)]">mídia</span> no Brasil
           </h1>
-          <p class="text-[14px] text-[var(--text-muted)] leading-[1.65] max-w-[440px] mx-auto mb-7">
+          <p class="text-[14px] text-[var(--text-muted)] leading-[1.65] max-w-[440px] mx-auto">
             Mapas interativos com dados da Anatel. Filtre estações, estime audiências e monte planos de mídia.
           </p>
 
-          {/* Search */}
-          <div style="animation: fadeUp 0.55s ease 0.08s both">
-            <HubSearch client:load />
-          </div>
-
           {/* Status */}
-          <div class="flex items-center justify-center gap-2 mt-5" style="animation: fadeUp 0.55s ease 0.12s both">
+          <div class="flex items-center justify-center gap-2 mt-5" style="animation: fadeUp 0.55s ease 0.08s both">
             <span class="w-1.5 h-1.5 rounded-full bg-[var(--color-green-400)] animate-[dotPulse_2.5s_ease_infinite]"></span>
             <span class="text-[12px] text-[var(--text-muted)]">Dados atualizados — Abril 2026</span>
           </div>
