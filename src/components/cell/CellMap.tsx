@@ -14,6 +14,7 @@ import { fetchERBs, getFilterOptions, type ERB } from './cellData';
 import { OPERADORA_COLORS, TECH_COLORS } from '../../lib/constants';
 import { formatAudience, estimateCellAudience, estimateCellRadius } from '../../lib/audience';
 import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom } from './analysisLayers';
+import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
 
 // ─── Supercluster setup ──────────────────────────
 
@@ -112,11 +113,13 @@ export default function CellMap() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [viewMode, setViewMode] = useState<string>('pins');
+  const [showCoverage, setShowCoverage] = useState(false);
   const mapRef = useRef<MLMap | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const indexRef = useRef<Supercluster<ErbFeature['properties']> | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const viewModeRef = useRef<string>('pins');
+  const coverageRef = useRef(false);
 
   // Load data
   useEffect(() => {
@@ -139,10 +142,13 @@ export default function CellMap() {
     clearMarkers();
     removeHeatmapLayer(map);
     removeDominanceLayer(map);
+    removeCoverageCircles(map);
 
     // Apply new mode
     if (mode === 'pins') {
       if (indexRef.current) renderMarkers();
+      // Re-apply coverage if enabled
+      if (coverageRef.current) updateCoverageCircles(map, filtered, true);
     } else if (mode === 'heatmap') {
       addHeatmapLayer(map, filtered);
     } else if (mode === 'dominance') {
@@ -155,6 +161,16 @@ export default function CellMap() {
     setViewMode(mode);
     applyViewMode(mode);
   }, [applyViewMode]);
+
+  const toggleCoverage = useCallback(() => {
+    const next = !coverageRef.current;
+    coverageRef.current = next;
+    setShowCoverage(next);
+    const map = mapRef.current;
+    if (map && viewModeRef.current === 'pins') {
+      updateCoverageCircles(map, filtered, next);
+    }
+  }, [filtered]);
 
   // Rebuild cluster index when filtered data changes
   useEffect(() => {
@@ -258,11 +274,11 @@ export default function CellMap() {
       const mode = viewModeRef.current;
       if (mode === 'pins') {
         renderMarkers();
+        // Update coverage circles on pan/zoom
+        if (coverageRef.current) updateCoverageCircles(map, filtered, true);
       } else if (mode === 'dominance') {
-        // Re-render dominance hexagons when zoom changes resolution
         updateDominanceForZoom(map, filtered);
       }
-      // Heatmap doesn't need move updates — MapLibre handles it natively
     };
 
     map.on('moveend', handleMapMove);
@@ -515,6 +531,19 @@ export default function CellMap() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
         </button>
+
+        {/* Coverage radius toggle */}
+        {viewMode === 'pins' && !loading && (
+          <button onClick={toggleCoverage} aria-label="Raios de cobertura" aria-pressed={showCoverage}
+            className={`absolute bottom-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold cursor-pointer transition-all shadow-lg
+              ${showCoverage
+                ? 'bg-[var(--accent-muted)] border-[var(--accent)] text-[var(--accent)]'
+                : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]'}`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Raios {showCoverage ? 'ON' : 'OFF'}
+          </button>
+        )}
       </MapContainer>
     </div>
 
