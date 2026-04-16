@@ -20,12 +20,12 @@ import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
 function downloadCSV(erbs: ERB[], cart: Set<number>) {
   const sel = erbs.filter(e => cart.has(e.id));
   if (!sel.length) return;
-  const h = ['operadora', 'uf', 'municipio', 'lat', 'lng', 'tech_principal', 'tecnologias', 'faixas', 'coord_source'];
+  const h = ['operadora', 'uf', 'municipio', 'lat', 'lng', 'tech_principal', 'tecnologias'];
   const rows = [
     h.join(','),
     ...sel.map(e => [
       e.prestadora_norm, e.uf, `"${e.municipio}"`, e.lat, e.lng,
-      e.tech_principal, `"${e.tecnologias.join(';')}"`, `"${e.faixas?.join(';')}"`, e.coord_source,
+      e.tech_principal, `"${e.tecnologias.join(';')}"`,
     ].join(',')),
   ];
   const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -54,6 +54,9 @@ export default function CellMap() {
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const viewModeRef = useRef<string>('pins');
   const coverageRef = useRef(false);
+  // Ref to always have current filtered data (avoids stale closures)
+  const filteredRef = useRef<ERB[]>([]);
+  filteredRef.current = filtered;
 
   // Load data
   useEffect(() => {
@@ -69,7 +72,7 @@ export default function CellMap() {
 
   const filterOptions = useMemo(() => getFilterOptions(allErbs), [allErbs]);
 
-  // ─── GeoJSON Layer rendering (native MapLibre, no DOM markers) ───
+  // ─── Layer management (reads from refs, no stale closures) ───
 
   const clearLayers = useCallback(() => {
     const map = mapRef.current;
@@ -80,15 +83,33 @@ export default function CellMap() {
     if (map.getSource('cell-erb')) map.removeSource('cell-erb');
   }, []);
 
-  const renderLayers = useCallback(() => {
+  const syncLayers = useCallback(() => {
     const map = mapRef.current;
-    if (!map || !filtered.length) return;
+    const data = filteredRef.current;
+    const mode = viewModeRef.current;
+    if (!map || !map.isStyleLoaded()) return;
 
+    // Clear everything
     clearLayers();
+    removeHeatmapLayer(map);
+    removeDominanceLayer(map);
+    removeCoverageCircles(map);
 
+    if (!data.length) return;
+
+    if (mode === 'heatmap') {
+      addHeatmapLayer(map, data);
+      return;
+    }
+    if (mode === 'dominance') {
+      addDominanceLayer(map, data);
+      return;
+    }
+
+    // Pins mode
     const geojson: GeoJSON.FeatureCollection = {
       type: 'FeatureCollection',
-      features: filtered.filter(e => e.lat && e.lng).map((e, i) => ({
+      features: data.filter(e => e.lat && e.lng).map((e, i) => ({
         type: 'Feature' as const,
         geometry: { type: 'Point' as const, coordinates: [e.lng, e.lat] },
         properties: { idx: i, id: e.id, op: e.prestadora_norm, tech: e.tech_principal },
@@ -102,7 +123,6 @@ export default function CellMap() {
       clusterMaxZoom: 14,
       clusterRadius: 60,
       clusterProperties: {
-        // Track all operators in cluster
         vivo: ['+', ['case', ['==', ['get', 'op'], 'Vivo'], 1, 0]],
         claro: ['+', ['case', ['==', ['get', 'op'], 'Claro'], 1, 0]],
         tim: ['+', ['case', ['==', ['get', 'op'], 'TIM'], 1, 0]],
@@ -112,7 +132,6 @@ export default function CellMap() {
       },
     });
 
-    // Helper: build operator color expression for MapLibre
     const opColorExpr = (prop: string): any => [
       'match', ['get', prop],
       'Vivo', OPERADORA_COLORS.Vivo,
@@ -125,133 +144,51 @@ export default function CellMap() {
       OPERADORA_COLORS.Outras,
     ];
 
-    // Cluster dominant color expression — pick operator with most ERBs
     const clusterColorExpr: any = [
       'case',
-      ['all',
-        ['>=', ['get', 'vivo'], ['get', 'claro']],
-        ['>=', ['get', 'vivo'], ['get', 'tim']],
-        ['>=', ['get', 'vivo'], ['get', 'brisanet']],
-      ], OPERADORA_COLORS.Vivo,
-      ['all',
-        ['>=', ['get', 'claro'], ['get', 'vivo']],
-        ['>=', ['get', 'claro'], ['get', 'tim']],
-        ['>=', ['get', 'claro'], ['get', 'brisanet']],
-      ], OPERADORA_COLORS.Claro,
-      ['all',
-        ['>=', ['get', 'tim'], ['get', 'vivo']],
-        ['>=', ['get', 'tim'], ['get', 'claro']],
-        ['>=', ['get', 'tim'], ['get', 'brisanet']],
-      ], OPERADORA_COLORS.TIM,
-      ['all',
-        ['>=', ['get', 'brisanet'], ['get', 'vivo']],
-        ['>=', ['get', 'brisanet'], ['get', 'claro']],
-        ['>=', ['get', 'brisanet'], ['get', 'tim']],
-      ], OPERADORA_COLORS.Brisanet,
+      ['all', ['>=', ['get', 'vivo'], ['get', 'claro']], ['>=', ['get', 'vivo'], ['get', 'tim']], ['>=', ['get', 'vivo'], ['get', 'brisanet']]], OPERADORA_COLORS.Vivo,
+      ['all', ['>=', ['get', 'claro'], ['get', 'vivo']], ['>=', ['get', 'claro'], ['get', 'tim']], ['>=', ['get', 'claro'], ['get', 'brisanet']]], OPERADORA_COLORS.Claro,
+      ['all', ['>=', ['get', 'tim'], ['get', 'vivo']], ['>=', ['get', 'tim'], ['get', 'claro']], ['>=', ['get', 'tim'], ['get', 'brisanet']]], OPERADORA_COLORS.TIM,
+      ['all', ['>=', ['get', 'brisanet'], ['get', 'vivo']], ['>=', ['get', 'brisanet'], ['get', 'claro']], ['>=', ['get', 'brisanet'], ['get', 'tim']]], OPERADORA_COLORS.Brisanet,
       OPERADORA_COLORS.Outras,
     ];
 
-    // Cluster circles — color by dominant operator
     map.addLayer({
-      id: 'cell-clusters',
-      type: 'circle',
-      source: 'cell-erb',
+      id: 'cell-clusters', type: 'circle', source: 'cell-erb',
       filter: ['has', 'point_count'],
       paint: {
-        'circle-color': clusterColorExpr,
-        'circle-opacity': 0.25,
+        'circle-color': clusterColorExpr, 'circle-opacity': 0.25,
         'circle-radius': ['step', ['get', 'point_count'], 16, 50, 20, 200, 26, 1000, 34, 5000, 42],
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': clusterColorExpr,
-        'circle-stroke-opacity': 0.6,
+        'circle-stroke-width': 1.5, 'circle-stroke-color': clusterColorExpr, 'circle-stroke-opacity': 0.6,
       },
     });
 
-    // Cluster count labels
     map.addLayer({
-      id: 'cell-cluster-count',
-      type: 'symbol',
-      source: 'cell-erb',
+      id: 'cell-cluster-count', type: 'symbol', source: 'cell-erb',
       filter: ['has', 'point_count'],
-      layout: {
-        'text-field': '{point_count_abbreviated}',
-        'text-font': ['Noto Sans Regular'],
-        'text-size': 12,
-      },
-      paint: {
-        'text-color': clusterColorExpr,
-      },
+      layout: { 'text-field': '{point_count_abbreviated}', 'text-font': ['Noto Sans Regular'], 'text-size': 12 },
+      paint: { 'text-color': clusterColorExpr },
     });
 
-    // Individual points — color by operator
     map.addLayer({
-      id: 'cell-points',
-      type: 'circle',
-      source: 'cell-erb',
+      id: 'cell-points', type: 'circle', source: 'cell-erb',
       filter: ['!', ['has', 'point_count']],
       paint: {
-        'circle-radius': 5,
-        'circle-color': opColorExpr('op'),
-        'circle-opacity': 0.85,
-        'circle-stroke-width': 1,
-        'circle-stroke-color': opColorExpr('op'),
-        'circle-stroke-opacity': 0.5,
+        'circle-radius': 5, 'circle-color': opColorExpr('op'), 'circle-opacity': 0.85,
+        'circle-stroke-width': 1, 'circle-stroke-color': opColorExpr('op'), 'circle-stroke-opacity': 0.5,
       },
     });
 
-    // Click on cluster → zoom in
-    map.on('click', 'cell-clusters', (e) => {
-      const feat = map.queryRenderedFeatures(e.point, { layers: ['cell-clusters'] });
-      if (!feat.length) return;
-      const src = map.getSource('cell-erb') as GeoJSONSource;
-      src.getClusterExpansionZoom(feat[0].properties?.cluster_id).then(z => {
-        map.easeTo({ center: (feat[0].geometry as GeoJSON.Point).coordinates as [number, number], zoom: z });
-      });
-    });
-
-    // Click on point → popup
-    map.on('click', 'cell-points', (e) => {
-      if (!e.features?.length) return;
-      const idx = e.features[0].properties?.idx;
-      if (idx != null) {
-        setActiveIdx(idx);
-        openPopup(idx, (e.features[0].geometry as GeoJSON.Point).coordinates as [number, number]);
-      }
-    });
-
-    // Cursor pointer on hover
-    ['cell-clusters', 'cell-points'].forEach(id => {
-      map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
-    });
-  }, [filtered, clearLayers]);
+    if (coverageRef.current) updateCoverageCircles(map, data, true);
+  }, [clearLayers]);
 
   // ─── View mode switching ────────────────────────
-
-  const applyViewMode = useCallback((mode: string) => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    clearLayers();
-    removeHeatmapLayer(map);
-    removeDominanceLayer(map);
-    removeCoverageCircles(map);
-
-    if (mode === 'pins') {
-      renderLayers();
-      if (coverageRef.current) updateCoverageCircles(map, filtered, true);
-    } else if (mode === 'heatmap') {
-      addHeatmapLayer(map, filtered);
-    } else if (mode === 'dominance') {
-      addDominanceLayer(map, filtered);
-    }
-  }, [filtered, renderLayers, clearLayers]);
 
   const handleViewModeChange = useCallback((mode: string) => {
     viewModeRef.current = mode;
     setViewMode(mode);
-    applyViewMode(mode);
-  }, [applyViewMode]);
+    syncLayers();
+  }, [syncLayers]);
 
   const toggleCoverage = useCallback(() => {
     const next = !coverageRef.current;
@@ -259,43 +196,65 @@ export default function CellMap() {
     setShowCoverage(next);
     const map = mapRef.current;
     if (map && viewModeRef.current === 'pins') {
-      updateCoverageCircles(map, filtered, next);
+      updateCoverageCircles(map, filteredRef.current, next);
     }
-  }, [filtered]);
+  }, []);
 
   // Re-render when filtered data changes
   useEffect(() => {
-    if (filtered.length > 0) {
-      applyViewMode(viewModeRef.current);
+    if (filtered.length > 0 && mapRef.current) {
+      syncLayers();
     }
-  }, [filtered]);
+  }, [filtered, syncLayers]);
 
   // ─── Map setup ──────────────────────────────────
 
   const onMapReady = useCallback((map: MLMap) => {
     mapRef.current = map;
 
-    // Native GeoJSON clustering handles move/zoom automatically.
-    // Only coverage circles and dominance need updates on zoom.
-    const handleMapMove = () => {
+    // Click handlers (registered once per map instance)
+    map.on('click', 'cell-clusters', (e) => {
+      const feat = map.queryRenderedFeatures(e.point, { layers: ['cell-clusters'] });
+      if (!feat.length) return;
+      const src = map.getSource('cell-erb') as GeoJSONSource;
+      if (!src) return;
+      src.getClusterExpansionZoom(feat[0].properties?.cluster_id).then(z => {
+        map.easeTo({ center: (feat[0].geometry as GeoJSON.Point).coordinates as [number, number], zoom: z });
+      });
+    });
+
+    map.on('click', 'cell-points', (e) => {
+      if (!e.features?.length) return;
+      const idx = e.features[0].properties?.idx;
+      if (idx != null) {
+        setActiveIdx(idx);
+        const coords = (e.features[0].geometry as GeoJSON.Point).coordinates as [number, number];
+        openPopup(idx, coords);
+      }
+    });
+
+    ['cell-clusters', 'cell-points'].forEach(id => {
+      map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
+    });
+
+    map.on('zoomend', () => {
       const mode = viewModeRef.current;
       if (mode === 'pins' && coverageRef.current) {
-        updateCoverageCircles(map, filtered, true);
+        updateCoverageCircles(map, filteredRef.current, true);
       } else if (mode === 'dominance') {
-        updateDominanceForZoom(map, filtered);
+        updateDominanceForZoom(map, filteredRef.current);
       }
-    };
+    });
 
-    map.on('zoomend', handleMapMove);
-
-    // Initial render
-    applyViewMode(viewModeRef.current);
-  }, [filtered, applyViewMode]);
+    // Render layers now
+    syncLayers();
+  }, [syncLayers]);
 
   // ─── Popup ──────────────────────────────────────
 
   const openPopup = useCallback((idx: number, coords: [number, number]) => {
-    const e = filtered[idx];
+    const e = filteredRef.current[idx];
     if (!e || !mapRef.current) return;
     if (popupRef.current) popupRef.current.remove();
 
@@ -337,9 +296,8 @@ export default function CellMap() {
     popupRef.current = popup;
     popup.on('close', () => { popupRef.current = null; });
 
-    // Draw coverage circle
     drawCoverageCircle(e, coords, radius);
-  }, [filtered]);
+  }, []);
 
   // ─── Coverage circle ────────────────────────────
 
@@ -351,12 +309,10 @@ export default function CellMap() {
     const layerId = 'coverage-circle-fill';
     const borderLayerId = 'coverage-circle-border';
 
-    // Remove existing
     if (map.getLayer(layerId)) map.removeLayer(layerId);
     if (map.getLayer(borderLayerId)) map.removeLayer(borderLayerId);
     if (map.getSource(sourceId)) map.removeSource(sourceId);
 
-    // Generate circle polygon
     const steps = 64;
     const coords: number[][] = [];
     for (let i = 0; i <= steps; i++) {
@@ -372,28 +328,11 @@ export default function CellMap() {
 
     map.addSource(sourceId, {
       type: 'geojson',
-      data: {
-        type: 'Feature',
-        geometry: { type: 'Polygon', coordinates: [coords] },
-        properties: {},
-      },
+      data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] }, properties: {} },
     });
+    map.addLayer({ id: layerId, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.08 } });
+    map.addLayer({ id: borderLayerId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.4, 'line-dasharray': [4, 4] } });
 
-    map.addLayer({
-      id: layerId,
-      type: 'fill',
-      source: sourceId,
-      paint: { 'fill-color': color, 'fill-opacity': 0.08 },
-    });
-
-    map.addLayer({
-      id: borderLayerId,
-      type: 'line',
-      source: sourceId,
-      paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.4, 'line-dasharray': [4, 4] },
-    });
-
-    // Remove on popup close
     if (popupRef.current) {
       popupRef.current.on('close', () => {
         if (map.getLayer(layerId)) map.removeLayer(layerId);
@@ -405,19 +344,17 @@ export default function CellMap() {
 
   // ─── Filter handler ─────────────────────────────
 
-  const onFilter = useCallback((nf: ERB[]) => {
-    setFiltered(nf);
-  }, []);
+  const onFilter = useCallback((nf: ERB[]) => { setFiltered(nf); }, []);
 
   // ─── Station focus ──────────────────────────────
 
   const focusStation = useCallback((i: number) => {
-    const e = filtered[i];
+    const e = filteredRef.current[i];
     if (!e?.lat || !e?.lng || !mapRef.current) return;
     mapRef.current.flyTo({ center: [e.lng, e.lat], zoom: Math.max(mapRef.current.getZoom(), 13), speed: 1.4 });
     setActiveIdx(i);
     setTimeout(() => openPopup(i, [e.lng, e.lat]), 400);
-  }, [filtered, openPopup]);
+  }, [openPopup]);
 
   // ─── Cart ───────────────────────────────────────
 
@@ -426,8 +363,8 @@ export default function CellMap() {
   }, []);
   const clearCart = useCallback(() => setCart(new Set()), []);
   const selectAll = useCallback(() => {
-    setCart(p => { const n = new Set(p); filtered.forEach(e => n.add(e.id)); return n; });
-  }, [filtered]);
+    setCart(p => { const n = new Set(p); filteredRef.current.forEach(e => n.add(e.id)); return n; });
+  }, []);
 
   const summary = useMemo(() => {
     if (!cart.size) return null;
@@ -506,7 +443,7 @@ export default function CellMap() {
             <div className="text-[11px] text-[var(--text-faint)]">Opacidade = grau de domínio</div>
           </>) : (<>
             <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2.5">Operadoras</div>
-            {Object.entries(opCounts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([op, n]) => (
+            {Object.entries(opCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([op, n]) => (
               <div key={op} className="flex items-center gap-2 text-[12px] text-[var(--text-primary)] mb-1.5">
                 <span className="w-[7px] h-[7px] rounded-full shrink-0"
                   style={{ background: OPERADORA_COLORS[op] || OPERADORA_COLORS['Outras'] }} />
