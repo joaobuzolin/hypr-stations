@@ -232,31 +232,29 @@ export default function CellMap() {
           map.easeTo({ center: [lng, lat], zoom: expansionZoom });
         });
 
-        const marker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+        const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
         markers.push(marker);
       } else {
         // Individual point
         const op = props.op;
-        const tech = props.tech;
         const color = OPERADORA_COLORS[op] || OPERADORA_COLORS['Outras'];
-        const techC = TECH_COLORS[tech] || TECH_COLORS['2G'];
 
         const el = document.createElement('div');
         el.style.cssText = `
-          width:10px;height:10px;border-radius:50%;
-          background:${color};border:1.5px solid ${color};
-          cursor:pointer;transition:transform 0.15s;
+          width:12px;height:12px;border-radius:50%;
+          background:${color};
+          cursor:pointer;transition:box-shadow 0.15s;
           box-shadow:0 0 0 2px ${color}30;
         `;
-        el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.6)'; });
-        el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
+        el.addEventListener('mouseenter', () => { el.style.boxShadow = `0 0 0 5px ${color}40`; });
+        el.addEventListener('mouseleave', () => { el.style.boxShadow = `0 0 0 2px ${color}30`; });
         el.addEventListener('click', () => {
           const idx = props.idx;
           setActiveIdx(idx);
           openPopup(idx, [lng, lat]);
         });
 
-        const marker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+        const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
         markers.push(marker);
       }
     }
