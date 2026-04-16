@@ -263,33 +263,38 @@ export default function CellMap() {
     const radius = estimateCellRadius(e.tech_principal, e.freq_mhz?.[0] ?? 0);
     const aud = estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0);
 
-    const row = (l: string, v: string) =>
-      `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)"><div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted);margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
-
     const techBadges = e.tecnologias.map(t => {
       const c = TECH_COLORS[t] || '#576773';
-      return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:${c}12;color:${c}">${t}</span>`;
+      return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:0.03em;background:${c}15;color:${c};border:0.5px solid ${c}25">${t}</span>`;
     }).join(' ');
 
-    const html = `<div style="font-family:Urbanist,sans-serif;background:var(--bg-surface);color:var(--text-primary)">
-      <div style="height:2px;background:${opColor}"></div>
-      <div style="padding:18px 20px 0">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <span style="font-weight:700;font-size:18px;color:${opColor}">${e.prestadora_norm}</span>
-          <span style="font-size:11px;color:var(--text-faint);margin-left:auto">${e.num_estacao}</span>
+    const html = `<div style="font-family:Urbanist,system-ui,sans-serif">
+      <div style="padding:20px 22px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${opColor};flex-shrink:0"></div>
+          <span style="font-weight:700;font-size:16px;color:${opColor};letter-spacing:-0.01em">${e.prestadora_norm}</span>
+          <span style="font-size:10px;color:var(--text-faint);margin-left:auto;font-family:var(--font-mono);letter-spacing:0.02em">${e.num_estacao}</span>
         </div>
-        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px">${e.municipio} — ${e.uf}</div>
-        <div style="margin-bottom:10px">${techBadges}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:12px;margin-left:18px">${e.municipio} — ${e.uf}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-left:18px">${techBadges}</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px">
-        ${row('Alcance estimado', '~' + Math.round(radius) + ' km')}
-        ${row('Coordenadas', `${e.lat.toFixed(4)}, ${e.lng.toFixed(4)}`)}
+      <div style="height:0.5px;background:var(--border-hover);margin:0 22px"></div>
+      <div style="display:flex;padding:14px 22px;gap:24px">
+        <div>
+          <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px">Alcance</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-primary)">~${Math.round(radius)} km</div>
+        </div>
+        <div>
+          <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px">Coordenadas</div>
+          <div style="font-size:12px;font-weight:500;color:var(--text-secondary);font-family:var(--font-mono)">${e.lat.toFixed(4)}, ${e.lng.toFixed(4)}</div>
+        </div>
       </div>
-      ${aud > 0 ? `<div style="background:var(--bg-surface2);border-radius:10px;padding:16px;text-align:center;margin:10px 20px">
-        <div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted)">População estimada no raio</div>
-        <div style="font-weight:700;font-size:20px;color:var(--accent);margin-top:5px;letter-spacing:-0.01em">${formatAudience(aud)} devices</div>
+      ${aud > 0 ? `
+      <div style="margin:0 14px 14px;padding:14px 16px;background:var(--accent-muted);border:0.5px solid var(--accent-glow);border-radius:10px;text-align:center">
+        <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">População no raio</div>
+        <div style="font-weight:700;font-size:18px;color:var(--accent);letter-spacing:-0.01em">${formatAudience(aud)} devices</div>
       </div>` : ''}
-      <div style="font-size:11px;color:var(--text-faint);text-align:center;margin:8px 20px 14px;opacity:0.6">Fonte: Anatel Fev/2026 · Modelo HYPR</div>
+      <div style="font-size:10px;color:var(--text-faint);text-align:center;padding:0 22px 14px;opacity:0.5">Anatel Fev/2026 · Modelo HYPR</div>
     </div>`;
 
     const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '360px', offset: 10 })
