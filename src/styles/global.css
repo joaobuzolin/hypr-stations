@@ -77,49 +77,22 @@
   --color-hypr-light: #f8fafb;
   --color-hypr-light2: #f0f3f6;
 
-  --color-neutral-50: #f0f3f6;
-  --color-neutral-100: #e2e7ec;
   --color-neutral-200: #c5cdd6;
   --color-neutral-300: #8899a6;
   --color-neutral-400: #576773;
   --color-neutral-500: #3d4d58;
-  --color-neutral-600: #2c3a44;
-  --color-neutral-700: #1e2a33;
-  --color-neutral-800: #151c23;
 
-  --color-teal-50: #e6f6fb;
-  --color-teal-100: #c0eaf5;
-  --color-teal-200: #8ad7eb;
   --color-teal-300: #4db8d4;
   --color-teal-400: #3a9ab8;
   --color-teal-500: #2a7f9e;
   --color-teal-600: #1f6680;
-  --color-teal-700: #164e63;
-  --color-teal-800: #0e3849;
 
-  --color-gold-50: #fdf8e8;
-  --color-gold-100: #f5ecc0;
-  --color-gold-200: #e8dd80;
   --color-gold-400: #d4c74a;
-  --color-gold-600: #a89c30;
-  --color-gold-800: #6e6618;
-
-  --color-red-50: #fdf0f0;
-  --color-red-100: #f8d4d4;
-  --color-red-200: #f0a8a8;
   --color-red-400: #e85454;
-  --color-red-600: #b83a3a;
-  --color-red-800: #7a2020;
-
   --color-green-400: #5cb87a;
-  --color-green-600: #3d8a56;
 
   --font-heading: 'Urbanist', system-ui, sans-serif;
   --font-body: 'Urbanist', system-ui, sans-serif;
-
-  --spacing-18: 4.5rem;
-  --spacing-88: 22rem;
-  --spacing-120: 30rem;
 }
 
 @layer base {
@@ -127,9 +100,6 @@
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  html {
     color-scheme: dark;
     --bg: var(--color-hypr-dark);
     --bg-surface: var(--color-hypr-surface);
@@ -253,46 +223,29 @@
 
 .maplibregl-popup-content {
   background: rgba(22, 29, 36, 0.97) !important;
-  border: 0.5px solid rgba(255, 255, 255, 0.08) !important;
+  border: 0.5px solid var(--border-hover) !important;
   border-radius: 16px !important;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), inset 0 0.5px 0 rgba(255,255,255,0.04) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), inset 0 0.5px 0 rgba(255, 255, 255, 0.04) !important;
   padding: 0 !important;
   overflow: hidden !important;
-  color: #e8ecf0 !important;
+  color: var(--text-primary) !important;
   max-width: 340px !important;
 }
 
 html.light .maplibregl-popup-content {
   background: rgba(255, 255, 255, 0.97) !important;
-  border: 0.5px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0.5px 0 rgba(255,255,255,0.5) !important;
-  color: #1a2530 !important;
-}
-
-.maplibregl-popup-anchor-top-left .maplibregl-popup-content,
-.maplibregl-popup-anchor-top-right .maplibregl-popup-content,
-.maplibregl-popup-anchor-bottom-left .maplibregl-popup-content,
-.maplibregl-popup-anchor-bottom-right .maplibregl-popup-content,
-.maplibregl-popup-anchor-top .maplibregl-popup-content,
-.maplibregl-popup-anchor-bottom .maplibregl-popup-content,
-.maplibregl-popup-anchor-left .maplibregl-popup-content,
-.maplibregl-popup-anchor-right .maplibregl-popup-content {
-  border-radius: 16px !important;
+  border-color: var(--border-hover) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0.5px 0 rgba(255, 255, 255, 0.5) !important;
+  color: var(--text-primary) !important;
 }
 
 .maplibregl-popup-tip,
 .maplibregl-popup .maplibregl-popup-tip {
   display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  border-width: 0 !important;
 }
 
 .maplibregl-popup-close-button {
-  color: rgba(255,255,255,0.4) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
   top: 14px !important;
   right: 14px !important;
   font-size: 16px !important;
@@ -301,7 +254,7 @@ html.light .maplibregl-popup-content {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: rgba(255,255,255,0.06) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   border: none !important;
   border-radius: 8px !important;
   cursor: pointer !important;
@@ -309,16 +262,16 @@ html.light .maplibregl-popup-content {
   line-height: 1 !important;
 }
 .maplibregl-popup-close-button:hover {
-  color: rgba(255,255,255,0.8) !important;
-  background: rgba(255,255,255,0.1) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 html.light .maplibregl-popup-close-button {
-  color: rgba(0,0,0,0.3) !important;
-  background: rgba(0,0,0,0.04) !important;
+  color: rgba(0, 0, 0, 0.3) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
 }
 html.light .maplibregl-popup-close-button:hover {
-  color: rgba(0,0,0,0.7) !important;
-  background: rgba(0,0,0,0.08) !important;
+  color: rgba(0, 0, 0, 0.7) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
 }
 
 .maplibregl-ctrl-group {
