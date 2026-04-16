@@ -61,6 +61,9 @@ export default function CellMap() {
       setAllErbs(data);
       setFiltered(data);
       setLoading(false);
+    }).catch(err => {
+      console.error('Failed to load ERBs:', err);
+      setLoading(false);
     });
   }, []);
 
