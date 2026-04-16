@@ -19,39 +19,74 @@ export interface ERB {
   azimutes: number[];
 }
 
-// ─── Fetch all ERBs ──────────────────────────────
+// ─── Fetch all ERBs (parallel pagination) ────────
 let _cache: ERB[] | null = null;
 
-export async function fetchERBs(): Promise<ERB[]> {
+export async function fetchERBs(onProgress?: (loaded: number) => void): Promise<ERB[]> {
   if (_cache) return _cache;
 
-  const cols = 'id,prestadora_norm,num_estacao,uf,municipio,cod_municipio,logradouro,lat,lng,coord_source,tecnologias,tech_principal,freq_mhz,faixas,azimutes';
+  // Light columns for map — skip logradouro, azimutes, emissoes for speed
+  const cols = 'id,prestadora_norm,num_estacao,uf,municipio,cod_municipio,lat,lng,coord_source,tecnologias,tech_principal,freq_mhz,faixas';
+  const pageSize = 10000;
 
-  // Supabase REST has a default limit of 1000 — paginate
-  const all: ERB[] = [];
-  let from = 0;
-  const pageSize = 5000;
+  // First, get total count
+  const { count } = await supabase
+    .from('erb')
+    .select('id', { count: 'exact', head: true });
 
-  while (true) {
-    const { data, error } = await supabase
-      .from('erb')
-      .select(cols)
-      .range(from, from + pageSize - 1)
-      .order('id');
+  const total = count || 0;
+  if (total === 0) return [];
 
-    if (error) {
-      console.error('ERB fetch error:', error.message);
-      break;
+  const pages = Math.ceil(total / pageSize);
+  const all: (ERB | null)[] = new Array(total).fill(null);
+  let loaded = 0;
+
+  // Fetch pages in parallel (max 4 concurrent)
+  const concurrency = 4;
+  for (let start = 0; start < pages; start += concurrency) {
+    const batch = [];
+    for (let i = start; i < Math.min(start + concurrency, pages); i++) {
+      const from = i * pageSize;
+      batch.push(
+        supabase
+          .from('erb')
+          .select(cols)
+          .range(from, from + pageSize - 1)
+          .order('id')
+          .then(({ data, error }) => {
+            if (error) {
+              console.error('ERB fetch error:', error.message);
+              return;
+            }
+            if (data) {
+              for (let j = 0; j < data.length; j++) {
+                all[from + j] = data[j] as ERB;
+              }
+              loaded += data.length;
+              onProgress?.(loaded);
+            }
+          })
+      );
     }
-    if (!data || data.length === 0) break;
-    all.push(...(data as ERB[]));
-    if (data.length < pageSize) break;
-    from += pageSize;
+    await Promise.all(batch);
   }
 
-  _cache = all;
-  console.log(`[CellData] Loaded ${all.length} ERBs`);
-  return all;
+  const result = all.filter(Boolean) as ERB[];
+  _cache = result;
+  console.log(`[CellData] Loaded ${result.length} ERBs`);
+  return result;
+}
+
+// ─── Fetch single ERB detail (on popup) ──────────
+export async function fetchERBDetail(id: number): Promise<ERB | null> {
+  const { data, error } = await supabase
+    .from('erb')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return null;
+  return data as ERB;
 }
 
 // ─── Derived filter options ──────────────────────
@@ -63,7 +98,7 @@ export function getFilterOptions(erbs: ERB[]) {
   for (const e of erbs) {
     ufs.add(e.uf);
     operadoras.add(e.prestadora_norm);
-    for (const f of e.faixas) faixas.add(f);
+    if (e.faixas) for (const f of e.faixas) faixas.add(f);
   }
 
   return {

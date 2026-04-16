@@ -24,7 +24,7 @@ export const MAPS = {
     href: '/cell',
     status: 'active' as const,
     accent: 'blue',
-    stats: { stations: '110K+', types: '2G–5G', source: 'Anatel/SMP' },
+    stats: { stations: '109K+', types: '2G–5G', source: 'Anatel Fev/2026' },
   },
   tv: {
     id: 'tv',

@@ -43,6 +43,7 @@ export default function CellMap() {
   const [allErbs, setAllErbs] = useState<ERB[]>([]);
   const [filtered, setFiltered] = useState<ERB[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [cart, setCart] = useState<Set<number>>(new Set());
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -56,7 +57,7 @@ export default function CellMap() {
 
   // Load data
   useEffect(() => {
-    fetchERBs().then(data => {
+    fetchERBs((n) => setLoadProgress(n)).then(data => {
       setAllErbs(data);
       setFiltered(data);
       setLoading(false);
@@ -95,13 +96,16 @@ export default function CellMap() {
       type: 'geojson',
       data: geojson,
       cluster: true,
-      clusterMaxZoom: 13,
-      clusterRadius: 55,
+      clusterMaxZoom: 14,
+      clusterRadius: 60,
       clusterProperties: {
-        // Track dominant operator in cluster
+        // Track all operators in cluster
         vivo: ['+', ['case', ['==', ['get', 'op'], 'Vivo'], 1, 0]],
         claro: ['+', ['case', ['==', ['get', 'op'], 'Claro'], 1, 0]],
         tim: ['+', ['case', ['==', ['get', 'op'], 'TIM'], 1, 0]],
+        brisanet: ['+', ['case', ['==', ['get', 'op'], 'Brisanet'], 1, 0]],
+        algar: ['+', ['case', ['==', ['get', 'op'], 'Algar'], 1, 0]],
+        unifique: ['+', ['case', ['==', ['get', 'op'], 'Unifique'], 1, 0]],
       },
     });
 
@@ -118,12 +122,30 @@ export default function CellMap() {
       OPERADORA_COLORS.Outras,
     ];
 
-    // Cluster dominant color expression
+    // Cluster dominant color expression — pick operator with most ERBs
     const clusterColorExpr: any = [
       'case',
-      ['>=', ['get', 'vivo'], ['max', ['get', 'claro'], ['get', 'tim']]], OPERADORA_COLORS.Vivo,
-      ['>=', ['get', 'claro'], ['max', ['get', 'vivo'], ['get', 'tim']]], OPERADORA_COLORS.Claro,
-      OPERADORA_COLORS.TIM,
+      ['all',
+        ['>=', ['get', 'vivo'], ['get', 'claro']],
+        ['>=', ['get', 'vivo'], ['get', 'tim']],
+        ['>=', ['get', 'vivo'], ['get', 'brisanet']],
+      ], OPERADORA_COLORS.Vivo,
+      ['all',
+        ['>=', ['get', 'claro'], ['get', 'vivo']],
+        ['>=', ['get', 'claro'], ['get', 'tim']],
+        ['>=', ['get', 'claro'], ['get', 'brisanet']],
+      ], OPERADORA_COLORS.Claro,
+      ['all',
+        ['>=', ['get', 'tim'], ['get', 'vivo']],
+        ['>=', ['get', 'tim'], ['get', 'claro']],
+        ['>=', ['get', 'tim'], ['get', 'brisanet']],
+      ], OPERADORA_COLORS.TIM,
+      ['all',
+        ['>=', ['get', 'brisanet'], ['get', 'vivo']],
+        ['>=', ['get', 'brisanet'], ['get', 'claro']],
+        ['>=', ['get', 'brisanet'], ['get', 'tim']],
+      ], OPERADORA_COLORS.Brisanet,
+      OPERADORA_COLORS.Outras,
     ];
 
     // Cluster circles — color by dominant operator
@@ -135,7 +157,7 @@ export default function CellMap() {
       paint: {
         'circle-color': clusterColorExpr,
         'circle-opacity': 0.25,
-        'circle-radius': ['step', ['get', 'point_count'], 18, 50, 24, 200, 32, 1000, 40],
+        'circle-radius': ['step', ['get', 'point_count'], 16, 50, 20, 200, 26, 1000, 34, 5000, 42],
         'circle-stroke-width': 1.5,
         'circle-stroke-color': clusterColorExpr,
         'circle-stroke-opacity': 0.6,
@@ -493,7 +515,7 @@ export default function CellMap() {
               </div>
             ))}
           </>)}
-          <div className="text-[11px] text-[var(--text-faint)] mt-2">Anatel/SMP · 2026</div>
+          <div className="text-[11px] text-[var(--text-faint)] mt-2">Anatel · Fev/2026</div>
         </div>
 
         {/* Loading overlay */}
@@ -502,7 +524,9 @@ export default function CellMap() {
             <div className="text-center">
               <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <div className="text-[13px] font-semibold text-[var(--text-primary)]">Carregando ERBs</div>
-              <div className="text-[12px] text-[var(--text-muted)] mt-1.5">Estações Rádio Base · Anatel/SMP</div>
+              <div className="text-[12px] text-[var(--text-muted)] mt-1.5">
+                {loadProgress > 0 ? `${loadProgress.toLocaleString('pt-BR')} estações...` : 'Estações Rádio Base · Anatel Fev/2026'}
+              </div>
             </div>
           </div>
         )}
