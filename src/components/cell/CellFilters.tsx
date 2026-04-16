@@ -25,9 +25,6 @@ const TECH_OPTS = [
   { value: '2G', label: '2G', color: TECH_COLORS['2G'] },
 ];
 
-const labelCls = "text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--text-muted)]";
-const inputCls = "w-full h-8 px-2.5 rounded-lg text-[12px] bg-[var(--bg-surface2)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors";
-
 const INITIAL: CellFilterState = {
   techs: new Set(['5G', '4G', '3G', '2G']),
   operadoras: new Set(),
@@ -39,13 +36,11 @@ const INITIAL: CellFilterState = {
 export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
   const uid = useId();
   const [f, setF] = useState<CellFilterState>(INITIAL);
-  const [collapsed, setCollapsed] = useState(false);
+  const [advOpen, setAdvOpen] = useState(false);
 
   const apply = useCallback((fl: CellFilterState) => {
     const cn = fl.cidade.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
     onFilter(erbs.filter(e => {
-      // Tech: station must have at least one matching tech
       if (!e.tecnologias.some(t => fl.techs.has(t))) return false;
       if (fl.operadoras.size && !fl.operadoras.has(e.prestadora_norm)) return false;
       if (fl.ufs.size && !fl.ufs.has(e.uf)) return false;
@@ -67,83 +62,89 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
     apply(INITIAL);
   }, [apply]);
 
-  // Build operadora options with colors
-  const opOpts = filterOptions.operadoras.map(op => ({
-    value: op,
-    label: `${op}`,
-    color: OPERADORA_COLORS[op] || OPERADORA_COLORS['Outras'],
-  }));
-
   return (
-    <div className="flex flex-col border-b border-[var(--border)] shrink-0">
-      <div className="flex items-center justify-between px-4 h-10 border-b border-[var(--border)]">
-        <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--text-muted)]">Filtros</span>
-        <button onClick={() => setCollapsed(!collapsed)} aria-expanded={!collapsed}
-          className="text-[10px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors">
-          {collapsed ? '▼ Expandir' : '▲ Recolher'}</button>
+    <div className="flex flex-col shrink-0">
+      {/* Primary: Technology */}
+      <div className="px-5 py-[18px] border-b border-[var(--border)]">
+        <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-3">
+          Tecnologia
+        </div>
+        <ToggleGroup label="Tecnologia" options={TECH_OPTS} active={f.techs} onChange={techs => upd({ techs })} />
       </div>
-      <div className={`px-4 py-3 flex flex-col gap-3 transition-all duration-200 overflow-hidden ${collapsed ? 'max-h-0 opacity-0 !py-0' : 'max-h-[700px] opacity-100'}`}>
 
-        {/* Technology toggle */}
-        <div className="flex flex-col gap-1.5">
-          <span className={labelCls}>Tecnologia</span>
-          <ToggleGroup label="Tecnologia" options={TECH_OPTS} active={f.techs} onChange={techs => upd({ techs })} />
+      {/* Primary: Operator chips */}
+      <div className="px-5 py-[18px] border-b border-[var(--border)]">
+        <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-3">
+          Operadora
         </div>
-
-        {/* Operator multi-select with color dots */}
-        <div className="flex flex-col gap-1">
-          <span className={labelCls}>Operadora</span>
-          <div className="flex flex-wrap gap-1.5">
-            {filterOptions.operadoras.map(op => {
-              const on = f.operadoras.size === 0 || f.operadoras.has(op);
-              const c = OPERADORA_COLORS[op] || OPERADORA_COLORS['Outras'];
-              return (
-                <button key={op} type="button" onClick={() => {
+        <div className="flex flex-wrap gap-1.5">
+          {filterOptions.operadoras.map(op => {
+            const on = f.operadoras.size === 0 || f.operadoras.has(op);
+            const c = OPERADORA_COLORS[op] || OPERADORA_COLORS['Outras'];
+            return (
+              <button key={op} type="button" onClick={() => {
+                if (f.operadoras.size === 0) {
+                  upd({ operadoras: new Set([op]) });
+                } else {
                   const n = new Set(f.operadoras);
-                  if (f.operadoras.size === 0) {
-                    // First click: select only this one
-                    filterOptions.operadoras.forEach(o => { if (o !== op) n.add(o); });
-                    n.delete(op);
-                    // Actually we want to SELECT this one. So set = {op}
-                    upd({ operadoras: new Set([op]) });
-                  } else if (n.has(op)) {
-                    n.delete(op);
-                    upd({ operadoras: n.size === 0 ? new Set() : n });
-                  } else {
-                    n.add(op);
-                    // If all selected, clear (= show all)
-                    upd({ operadoras: n.size === filterOptions.operadoras.length ? new Set() : n });
-                  }
-                }}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer border
-                    ${on ? 'border-current' : 'border-[var(--border)] opacity-40'}`}
-                  style={on ? { color: c, background: c + '15' } : { color: 'var(--text-muted)' }}>
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: c }} />
-                  {op}
-                </button>
-              );
-            })}
+                  n.has(op) ? n.delete(op) : n.add(op);
+                  upd({ operadoras: n.size === filterOptions.operadoras.length ? new Set() : n });
+                }
+              }}
+                className={`flex items-center gap-[6px] px-3 py-[5px] rounded-lg text-[11px] font-medium
+                            transition-all duration-200 cursor-pointer border-[0.5px]
+                            ${on ? 'border-current' : 'border-transparent opacity-35'}`}
+                style={on ? { color: c, background: c + '0F' } : { color: 'var(--text-muted)', background: 'var(--bg-surface2)' }}>
+                <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: c }} />
+                {op}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Secondary: Advanced filters (collapsible) */}
+      <div className="px-5 py-[18px] border-b border-[var(--border)]">
+        <button
+          type="button"
+          onClick={() => setAdvOpen(!advOpen)}
+          className="flex items-center justify-between w-full cursor-pointer"
+        >
+          <span className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">
+            Filtros avançados
+          </span>
+          <svg
+            width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="var(--text-faint)"
+            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+            className={`transition-transform duration-200 ${advOpen ? 'rotate-180' : ''}`}
+          >
+            <path d="M1 1l4 4 4-4" />
+          </svg>
+        </button>
+
+        {advOpen && (
+          <div className="flex flex-col gap-2.5 mt-4">
+            <MultiSelect label="Estado (UF)" placeholder="Todos os estados" options={filterOptions.ufs}
+              selected={f.ufs} onChange={ufs => upd({ ufs })} />
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={`cc-${uid}`} className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">Cidade</label>
+              <input id={`cc-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
+                placeholder="Buscar município..."
+                className="w-full h-[34px] px-3 rounded-lg text-[12px] bg-[var(--bg-surface2)] border-[0.5px] border-[var(--border)]
+                           text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none
+                           focus:border-[rgba(77,184,212,0.3)] transition-colors" />
+            </div>
+
+            <MultiSelect label="Faixa (MHz)" placeholder="Todas" options={filterOptions.faixas}
+              selected={f.faixas} onChange={faixas => upd({ faixas })} searchable={false} />
+
+            <button onClick={reset}
+              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors py-1 text-center">
+              Limpar filtros
+            </button>
           </div>
-        </div>
-
-        {/* UF */}
-        <MultiSelect label="Estado (UF)" placeholder="Todos os estados" options={filterOptions.ufs}
-          selected={f.ufs} onChange={ufs => upd({ ufs })} />
-
-        {/* Cidade */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`cc-${uid}`} className={labelCls}>Cidade</label>
-          <input id={`cc-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
-            placeholder="Buscar município..." className={inputCls} />
-        </div>
-
-        {/* Faixa de frequência */}
-        <MultiSelect label="Faixa (MHz)" placeholder="Todas" options={filterOptions.faixas}
-          selected={f.faixas} onChange={faixas => upd({ faixas })} searchable={false} />
-
-        <button onClick={reset}
-          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors py-1">
-          ↺ Limpar filtros</button>
+        )}
       </div>
     </div>
   );

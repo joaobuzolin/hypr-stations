@@ -11,18 +11,19 @@ const MODES = [
 
 export default function ViewModeSelector({ mode, onChange }: Props) {
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex rounded-lg overflow-hidden border
-      bg-[var(--bg-surface)] border-[var(--border)] shadow-lg"
+    <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-10 flex rounded-[10px] overflow-hidden
+                    border-[0.5px] border-[var(--border)] overlay-panel"
       role="radiogroup" aria-label="Modo de visualização">
       {MODES.map(m => {
         const on = mode === m.value;
         return (
           <button key={m.value} role="radio" aria-checked={on} onClick={() => onChange(m.value)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold transition-all cursor-pointer
-              ${on
-                ? 'bg-[var(--accent-muted)] text-[var(--accent)]'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-surface2)]'}`}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            className={`flex items-center gap-1.5 px-[18px] py-2 text-[11px] font-medium
+                        transition-all duration-200 cursor-pointer
+                        ${on
+                          ? 'bg-[var(--accent-muted)] text-[var(--accent)]'
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.03)]'}`}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d={m.icon} /></svg>
             {m.label}
           </button>

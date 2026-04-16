@@ -96,25 +96,30 @@ export default function RadioMap() {
     const aud = estimateRadioAudience(s.erp, s.tipo, s.classe, s.uf);
     const c = s.tipo === 'FM' ? RADIO_COLORS.fm : RADIO_COLORS.am;
     const u = s.tipo === 'FM' ? 'MHz' : 'kHz';
-    const row = (l: string, v: string) => `<div style="padding:6px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:2px">${l}</div><div style="font-size:12px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
-    const html = `<div style="padding:16px 18px;min-width:260px;font-family:Urbanist,sans-serif">
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
-        <span style="font-weight:800;font-size:20px;color:${c}">${s.frequencia}</span>
-        <span style="font-size:11px;color:var(--text-muted)">${u}</span>
-        <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${s._fantasy || s.tipo}</span>
+    const row = (l: string, v: string) => `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)"><div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted);margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
+    const html = `<div style="font-family:Urbanist,sans-serif">
+      <div style="height:2px;background:${c}"></div>
+      <div style="padding:18px 20px 0">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
+          <span style="font-weight:700;font-size:20px;color:${c}">${s.frequencia}</span>
+          <span style="font-size:11px;color:var(--text-faint)">${u}</span>
+          <span style="font-size:11px;color:var(--text-faint);margin-left:auto">${s._fantasy || s.tipo}</span>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:10px">${s.municipio} — ${s.uf}</div>
       </div>
-      <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:12px">${s.municipio} — ${s.uf}</div>
-      ${row('Entidade', s.entidade || '—')}
-      <div style="display:grid;grid-template-columns:1fr 1fr">
-        ${row('Classe', s.classe || '—')}${row('Categoria', s.categoria || '—')}
-        ${row('ERP / Alcance', erp.toLocaleString('pt-BR') + ' W (~' + r + ' km)')}${row('Finalidade', s.finalidade || '—')}
-        ${row('Caráter', s.carater || '—')}<div></div>
+      <div style="padding:0 20px">
+        ${row('Entidade', s.entidade || '—')}
+        <div style="display:grid;grid-template-columns:1fr 1fr">
+          ${row('Classe', s.classe || '—')}${row('Categoria', s.categoria || '—')}
+          ${row('ERP / Alcance', erp.toLocaleString('pt-BR') + ' W (~' + r + ' km)')}${row('Finalidade', s.finalidade || '—')}
+          ${row('Caráter', s.carater || '—')}<div></div>
+        </div>
       </div>
-      ${aud > 0 ? `<div style="background:var(--bg-surface2);border-radius:8px;padding:8px;text-align:center;margin-top:10px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)">Audiência estimada</div>
-        <div style="font-weight:800;font-size:18px;color:var(--accent);margin-top:2px">${formatAudience(aud)} devices</div>
+      ${aud > 0 ? `<div style="background:var(--bg-surface2);border-radius:10px;padding:16px;text-align:center;margin:10px 20px">
+        <div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted)">Audiência estimada</div>
+        <div style="font-weight:700;font-size:20px;color:var(--accent);margin-top:5px;letter-spacing:-0.01em">${formatAudience(aud)} devices</div>
       </div>` : ''}
-      <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:8px;opacity:0.6">Modelo HYPR: alcance × densidade × penetração × campanha 30d</div>
+      <div style="font-size:11px;color:var(--text-faint);text-align:center;margin:8px 20px 14px;opacity:0.5">Modelo HYPR: alcance × densidade × penetração × campanha 30d</div>
     </div>`;
     const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '340px', offset: 10 })
       .setLngLat(coords).setHTML(html).addTo(mapRef.current!);
@@ -156,7 +161,7 @@ export default function RadioMap() {
     <div className="flex flex-1 h-full min-h-0 overflow-hidden">
       {/* Sidebar — 200px like original */}
       <aside aria-label="Filtros e estações"
-        className="hidden md:flex w-[240px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
+        className="hidden md:flex w-[290px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
         <RadioFilters stations={allStations} onFilter={onFilter} />
         <StationList stations={filtered} cart={cart} activeIdx={activeIdx} onFocus={focusStation}
           onToggleCart={toggleCart} onClearCart={clearCart} onSelectAll={selectAll} totalCount={filtered.length} />
@@ -164,20 +169,20 @@ export default function RadioMap() {
 
       <MapContainer onMapReady={onMapReady}>
         {/* Legend */}
-        <div className="absolute bottom-4 right-4 z-10 rounded-lg border px-3 py-2 pointer-events-none bg-[var(--bg-surface)] border-[var(--border)]">
-          <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--text-muted)] mb-1.5">Legenda</div>
-          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-primary)] mb-1">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: RADIO_COLORS.fm }} aria-hidden="true" /> FM — {fmN.toLocaleString('pt-BR')}
+        <div className="absolute bottom-3.5 right-3.5 z-10 rounded-[10px] border-[0.5px] px-4 py-3 pointer-events-none overlay-panel">
+          <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2.5">Legenda</div>
+          <div className="flex items-center gap-2 text-[12px] text-[var(--text-primary)] mb-1.5">
+            <span className="w-[7px] h-[7px] rounded-full" style={{ background: RADIO_COLORS.fm }} aria-hidden="true" /> FM — {fmN.toLocaleString('pt-BR')}
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-primary)]">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: RADIO_COLORS.am }} aria-hidden="true" /> AM/OM — {(filtered.length - fmN).toLocaleString('pt-BR')}
+          <div className="flex items-center gap-2 text-[12px] text-[var(--text-primary)]">
+            <span className="w-[7px] h-[7px] rounded-full" style={{ background: RADIO_COLORS.am }} aria-hidden="true" /> AM/OM — {(filtered.length - fmN).toLocaleString('pt-BR')}
           </div>
-          <div className="text-[9px] text-[var(--text-muted)] mt-1.5">Fonte: Anatel/SRD · 2026</div>
+          <div className="text-[11px] text-[var(--text-faint)] mt-2">Anatel/SRD · 2026</div>
         </div>
 
         {/* Mobile FAB */}
         <button onClick={() => setDrawerOpen(true)} aria-label="Filtros"
-          className="md:hidden absolute top-4 left-4 z-10 w-10 h-10 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer shadow-lg">
+          className="md:hidden absolute top-3.5 left-3.5 z-10 w-10 h-10 rounded-[10px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer overlay-panel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
         </button>

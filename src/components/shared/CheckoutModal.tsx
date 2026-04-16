@@ -88,8 +88,8 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
     <div className="fixed inset-0 z-[3500] flex items-start justify-center p-5 overflow-y-auto
                     bg-[var(--overlay)]" style={{ backdropFilter: 'blur(4px)' }}
          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl
-                      w-full max-w-[500px] mt-10 p-6 relative" onClick={e => e.stopPropagation()}>
+      <div className="bg-[var(--bg-surface)] border-[0.5px] border-[var(--border)] rounded-[14px]
+                      w-full max-w-[500px] mt-10 p-7 relative" onClick={e => e.stopPropagation()}>
 
         {/* Close */}
         <button onClick={onClose} aria-label="Fechar"

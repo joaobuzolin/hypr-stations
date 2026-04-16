@@ -16,8 +16,9 @@ const TYPE_OPTS = [
   { value: 'OM', label: 'AM/OM', color: RADIO_COLORS.am },
 ];
 
-const labelCls = "text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--text-muted)]";
-const inputCls = "w-full h-8 px-2.5 rounded-lg text-[12px] bg-[var(--bg-surface2)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors";
+const inputCls = `w-full h-[34px] px-3 rounded-lg text-[12px] bg-[var(--bg-surface2)] border-[0.5px] border-[var(--border)]
+                  text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none
+                  focus:border-[rgba(77,184,212,0.3)] transition-colors`;
 
 export default function RadioFilters({ stations, onFilter }: Props) {
   const uid = useId();
@@ -25,7 +26,7 @@ export default function RadioFilters({ stations, onFilter }: Props) {
     types: new Set(['FM', 'OM']), ufs: new Set(), classes: new Set(), finalidades: new Set(),
     cidade: '', entidade: '', nome: '',
   });
-  const [collapsed, setCollapsed] = useState(false);
+  const [advOpen, setAdvOpen] = useState(false);
 
   const apply = useCallback((fl: RadioFilterState) => {
     const cn = fl.cidade.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -53,35 +54,67 @@ export default function RadioFilters({ stations, onFilter }: Props) {
   }, [apply]);
 
   return (
-    <div className="flex flex-col border-b border-[var(--border)] shrink-0">
-      <div className="flex items-center justify-between px-4 h-10 border-b border-[var(--border)]">
-        <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--text-muted)]">Filtros</span>
-        <button onClick={() => setCollapsed(!collapsed)} aria-expanded={!collapsed}
-          className="text-[10px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors">
-          {collapsed ? '▼ Expandir' : '▲ Recolher'}</button>
+    <div className="flex flex-col shrink-0">
+      {/* Primary: Type */}
+      <div className="px-5 py-[18px] border-b border-[var(--border)]">
+        <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-3">
+          Tipo
+        </div>
+        <ToggleGroup label="Tipo" options={TYPE_OPTS} active={f.types} onChange={types => upd({ types })} />
       </div>
-      <div className={`px-4 py-3 flex flex-col gap-3 transition-all duration-200 overflow-hidden ${collapsed ? 'max-h-0 opacity-0 !py-0' : 'max-h-[700px] opacity-100'}`}>
-        <div className="flex flex-col gap-1.5">
-          <span className={labelCls}>Tipo</span>
-          <ToggleGroup label="Tipo" options={TYPE_OPTS} active={f.types} onChange={types => upd({ types })} />
-        </div>
-        <MultiSelect label="Estado (UF)" placeholder="Todos os estados" options={ALL_UFS} selected={f.ufs} onChange={ufs => upd({ ufs })} />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`c-${uid}`} className={labelCls}>Cidade</label>
-          <input id={`c-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })} placeholder="Buscar cidade..." className={inputCls} />
-        </div>
-        <MultiSelect label="Classe" placeholder="Todas as classes" options={ALL_CLASSES} selected={f.classes} onChange={classes => upd({ classes })} />
-        <MultiSelect label="Finalidade" placeholder="Todas" options={ALL_FINALIDADES} selected={f.finalidades} onChange={finalidades => upd({ finalidades })} searchable={false} />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`e-${uid}`} className={labelCls}>Entidade</label>
-          <input id={`e-${uid}`} value={f.entidade} onChange={e => upd({ entidade: e.target.value })} placeholder="Buscar entidade..." className={inputCls} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`n-${uid}`} className={labelCls}>Nome da rádio</label>
-          <input id={`n-${uid}`} value={f.nome} onChange={e => upd({ nome: e.target.value })} placeholder="Jovem Pan, Band, CBN..." className={inputCls} />
-        </div>
-        <button onClick={reset} className="text-[11px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors py-1">
-          ↺ Limpar filtros</button>
+
+      {/* Primary: UF */}
+      <div className="px-5 py-[18px] border-b border-[var(--border)]">
+        <MultiSelect label="Estado (UF)" placeholder="Todos os estados" options={ALL_UFS}
+          selected={f.ufs} onChange={ufs => upd({ ufs })} />
+      </div>
+
+      {/* Secondary: Advanced (collapsible) */}
+      <div className="px-5 py-[18px] border-b border-[var(--border)]">
+        <button
+          type="button"
+          onClick={() => setAdvOpen(!advOpen)}
+          className="flex items-center justify-between w-full cursor-pointer"
+        >
+          <span className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">
+            Filtros avançados
+          </span>
+          <svg
+            width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="var(--text-faint)"
+            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+            className={`transition-transform duration-200 ${advOpen ? 'rotate-180' : ''}`}
+          >
+            <path d="M1 1l4 4 4-4" />
+          </svg>
+        </button>
+
+        {advOpen && (
+          <div className="flex flex-col gap-2.5 mt-4">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={`c-${uid}`} className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">Cidade</label>
+              <input id={`c-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
+                placeholder="Buscar cidade..." className={inputCls} />
+            </div>
+            <MultiSelect label="Classe" placeholder="Todas as classes" options={ALL_CLASSES}
+              selected={f.classes} onChange={classes => upd({ classes })} />
+            <MultiSelect label="Finalidade" placeholder="Todas" options={ALL_FINALIDADES}
+              selected={f.finalidades} onChange={finalidades => upd({ finalidades })} searchable={false} />
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={`e-${uid}`} className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">Entidade</label>
+              <input id={`e-${uid}`} value={f.entidade} onChange={e => upd({ entidade: e.target.value })}
+                placeholder="Buscar entidade..." className={inputCls} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={`n-${uid}`} className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">Nome da rádio</label>
+              <input id={`n-${uid}`} value={f.nome} onChange={e => upd({ nome: e.target.value })}
+                placeholder="Jovem Pan, Band, CBN..." className={inputCls} />
+            </div>
+            <button onClick={reset}
+              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors py-1 text-center">
+              Limpar filtros
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

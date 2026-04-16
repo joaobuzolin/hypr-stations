@@ -280,32 +280,35 @@ export default function CellMap() {
     const aud = estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz[0]);
 
     const row = (l: string, v: string) =>
-      `<div style="padding:6px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:2px">${l}</div><div style="font-size:12px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
+      `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)"><div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted);margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
 
     const techBadges = e.tecnologias.map(t => {
-      const c = TECH_COLORS[t] || '#999';
-      return `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;background:${c}20;color:${c}">${t}</span>`;
+      const c = TECH_COLORS[t] || '#576773';
+      return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:${c}12;color:${c}">${t}</span>`;
     }).join(' ');
 
-    const html = `<div style="padding:16px 18px;min-width:280px;font-family:Urbanist,sans-serif">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <span style="font-weight:800;font-size:18px;color:${opColor}">${e.prestadora_norm}</span>
-        <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${e.num_estacao}</span>
+    const html = `<div style="font-family:Urbanist,sans-serif">
+      <div style="height:2px;background:${opColor}"></div>
+      <div style="padding:18px 20px 0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-weight:700;font-size:18px;color:${opColor}">${e.prestadora_norm}</span>
+          <span style="font-size:11px;color:var(--text-faint);margin-left:auto">${e.num_estacao}</span>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px">${e.municipio} — ${e.uf}</div>
+        <div style="margin-bottom:10px">${techBadges}</div>
       </div>
-      <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:8px">${e.municipio} — ${e.uf}</div>
-      <div style="margin-bottom:12px">${techBadges}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr">
+      <div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px">
         ${row('Faixas', e.faixas.map(f => f + ' MHz').join(', ') || '—')}
         ${row('Alcance estimado', '~' + Math.round(radius) + ' km')}
         ${row('Coordenadas', e.coord_source === 'anatel' ? 'Anatel (real)' : 'Centróide IBGE')}
         ${row('Azimutes', e.azimutes.length ? e.azimutes.join('° · ') + '°' : '—')}
       </div>
-      ${aud > 0 ? `<div style="background:var(--bg-surface2);border-radius:8px;padding:8px;text-align:center;margin-top:10px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)">População estimada no raio</div>
-        <div style="font-weight:800;font-size:18px;color:var(--accent);margin-top:2px">${formatAudience(aud)} devices</div>
+      ${aud > 0 ? `<div style="background:var(--bg-surface2);border-radius:10px;padding:16px;text-align:center;margin:10px 20px">
+        <div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted)">População estimada no raio</div>
+        <div style="font-weight:700;font-size:20px;color:var(--accent);margin-top:5px;letter-spacing:-0.01em">${formatAudience(aud)} devices</div>
       </div>` : ''}
-      ${e.logradouro ? `<div style="font-size:10px;color:var(--text-muted);margin-top:8px;opacity:0.7">${e.logradouro}</div>` : ''}
-      <div style="font-size:9px;color:var(--text-muted);text-align:center;margin-top:8px;opacity:0.5">Fonte: Anatel/SMP · Modelo HYPR</div>
+      ${e.logradouro ? `<div style="font-size:11px;color:var(--text-faint);margin:8px 20px 0">${e.logradouro}</div>` : ''}
+      <div style="font-size:11px;color:var(--text-faint);text-align:center;margin:8px 20px 14px;opacity:0.6">Fonte: Anatel/SMP · Modelo HYPR</div>
     </div>`;
 
     const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '360px', offset: 10 })
@@ -433,7 +436,7 @@ export default function CellMap() {
     <div className="flex flex-1 h-full min-h-0 overflow-hidden">
       {/* Sidebar */}
       <aside aria-label="Filtros e ERBs"
-        className="hidden md:flex w-[260px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
+        className="hidden md:flex w-[290px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
@@ -465,32 +468,32 @@ export default function CellMap() {
         )}
 
         {/* Legend */}
-        <div className="absolute bottom-4 right-4 z-10 rounded-lg border px-3 py-2 pointer-events-none bg-[var(--bg-surface)] border-[var(--border)]">
+        <div className="absolute bottom-3.5 right-3.5 z-10 rounded-[10px] border-[0.5px] px-4 py-3 pointer-events-none overlay-panel">
           {viewMode === 'heatmap' ? (<>
-            <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--text-muted)] mb-1.5">Densidade</div>
+            <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2">Densidade</div>
             <div className="flex items-center gap-1 mb-1">
-              <div className="h-2 flex-1 rounded-full" style={{
+              <div className="h-[3px] flex-1 rounded-full" style={{
                 background: 'linear-gradient(to right, rgba(33,102,172,0.4), rgba(51,151,185,0.6), rgba(102,194,165,0.7), rgba(237,217,0,0.8), rgba(245,39,43,0.85))'
               }} />
             </div>
-            <div className="flex justify-between text-[9px] text-[var(--text-muted)]">
+            <div className="flex justify-between text-[11px] text-[var(--text-faint)]">
               <span>Baixa</span><span>Alta</span>
             </div>
           </>) : viewMode === 'dominance' ? (<>
-            <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--text-muted)] mb-1.5">Dominância</div>
-            <div className="text-[10px] text-[var(--text-muted)] mb-1">Cor = operadora com mais ERBs na região</div>
-            <div className="text-[9px] text-[var(--text-muted)] opacity-70">Opacidade = grau de domínio</div>
+            <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2">Dominância</div>
+            <div className="text-[11px] text-[var(--text-muted)] mb-1">Cor = operadora com mais ERBs na região</div>
+            <div className="text-[11px] text-[var(--text-faint)]">Opacidade = grau de domínio</div>
           </>) : (<>
-            <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--text-muted)] mb-1.5">Operadoras</div>
+            <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2.5">Operadoras</div>
             {Object.entries(opCounts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([op, n]) => (
-              <div key={op} className="flex items-center gap-1.5 text-[11px] text-[var(--text-primary)] mb-0.5">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0"
+              <div key={op} className="flex items-center gap-2 text-[12px] text-[var(--text-primary)] mb-1.5">
+                <span className="w-[7px] h-[7px] rounded-full shrink-0"
                   style={{ background: OPERADORA_COLORS[op] || OPERADORA_COLORS['Outras'] }} />
                 {op} — {n.toLocaleString('pt-BR')}
               </div>
             ))}
           </>)}
-          <div className="text-[9px] text-[var(--text-muted)] mt-1.5">Fonte: Anatel/SMP · 2026</div>
+          <div className="text-[11px] text-[var(--text-faint)] mt-2">Anatel/SMP · 2026</div>
         </div>
 
         {/* Loading overlay */}
@@ -506,7 +509,7 @@ export default function CellMap() {
 
         {/* Mobile FAB */}
         <button onClick={() => setDrawerOpen(true)} aria-label="Filtros"
-          className="md:hidden absolute top-4 left-4 z-10 w-10 h-10 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer shadow-lg">
+          className="md:hidden absolute top-3.5 left-3.5 z-10 w-10 h-10 rounded-[10px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer overlay-panel">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="18" y2="18"/></svg>
         </button>
@@ -514,10 +517,10 @@ export default function CellMap() {
         {/* Coverage radius toggle */}
         {viewMode === 'pins' && !loading && (
           <button onClick={toggleCoverage} aria-label="Raios de cobertura" aria-pressed={showCoverage}
-            className={`absolute bottom-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold cursor-pointer transition-all shadow-lg
+            className={`absolute bottom-3.5 left-3.5 z-10 flex items-center gap-2 px-4 py-2 rounded-[10px] border-[0.5px] text-[11px] font-medium cursor-pointer transition-all duration-200
               ${showCoverage
                 ? 'bg-[var(--accent-muted)] border-[var(--accent)] text-[var(--accent)]'
-                : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]'}`}>
+                : 'overlay-panel text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[rgba(77,184,212,0.25)]'}`}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
             Raios {showCoverage ? 'ON' : 'OFF'}
