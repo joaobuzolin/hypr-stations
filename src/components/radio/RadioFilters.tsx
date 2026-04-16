@@ -87,13 +87,12 @@ export default function RadioFilters({ stations, onFilter, allUFs, allClasses, a
         </button>
 
         {advOpen && (
-          <div className="flex flex-col gap-4 mt-4 min-w-0 overflow-hidden">
+          <div className="flex flex-col gap-4 mt-4 min-w-0">
             <div className="min-w-0">
               <label htmlFor={`c-${uid}`} className="block text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-1.5">Cidade</label>
               <input id={`c-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
                 placeholder="Buscar cidade..."
-                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)' }}
-                className="block w-full max-w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200" />
+                className="block w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200 bg-[var(--input-bg)] border border-[var(--input-border)]" />
             </div>
 
             <MultiSelect label="Classe" placeholder="Todas as classes" options={allClasses}
@@ -106,22 +105,19 @@ export default function RadioFilters({ stations, onFilter, allUFs, allClasses, a
               <label htmlFor={`e-${uid}`} className="block text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-1.5">Entidade</label>
               <input id={`e-${uid}`} value={f.entidade} onChange={e => upd({ entidade: e.target.value })}
                 placeholder="Buscar entidade..."
-                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)' }}
-                className="block w-full max-w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200" />
+                className="block w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200 bg-[var(--input-bg)] border border-[var(--input-border)]" />
             </div>
 
             <div className="min-w-0">
               <label htmlFor={`n-${uid}`} className="block text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-1.5">Nome da rádio</label>
               <input id={`n-${uid}`} value={f.nome} onChange={e => upd({ nome: e.target.value })}
                 placeholder="Jovem Pan, Band, CBN..."
-                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)' }}
-                className="block w-full max-w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200" />
+                className="block w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200 bg-[var(--input-bg)] border border-[var(--input-border)]" />
             </div>
 
             <button onClick={reset} type="button"
-              style={{ background: 'none', border: '1px solid var(--input-border-subtle)' }}
-              className="block w-full max-w-full h-8 rounded-md text-[11px] font-medium text-[var(--accent)]
-                         hover:border-[var(--accent)] cursor-pointer transition-colors duration-200">
+              className="block w-full h-8 rounded-md text-[11px] font-medium text-[var(--accent)]
+                         hover:border-[var(--accent)] cursor-pointer transition-colors duration-200 bg-transparent border border-[var(--input-border-subtle)]">
               Limpar filtros
             </button>
           </div>

@@ -118,7 +118,7 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
         </button>
 
         {advOpen && (
-          <div className="flex flex-col gap-4 mt-4 min-w-0 overflow-hidden">
+          <div className="flex flex-col gap-4 mt-4 min-w-0">
             <MultiSelect label="Estado (UF)" placeholder="Todos os estados" options={filterOptions.ufs}
               selected={f.ufs} onChange={ufs => upd({ ufs })} />
 
@@ -126,17 +126,15 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
               <label htmlFor={`cc-${uid}`} className="block text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-1.5">Cidade</label>
               <input id={`cc-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
                 placeholder="Buscar município..."
-                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)' }}
-                className="block w-full max-w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200" />
+                className="block w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200 bg-[var(--input-bg)] border border-[var(--input-border)]" />
             </div>
 
             <MultiSelect label="Faixa (MHz)" placeholder="Todas" options={filterOptions.faixas}
               selected={f.faixas} onChange={faixas => upd({ faixas })} searchable={false} />
 
             <button onClick={reset} type="button"
-              style={{ background: 'none', border: '1px solid var(--input-border-subtle)' }}
-              className="block w-full max-w-full h-8 rounded-md text-[11px] font-medium text-[var(--accent)]
-                         hover:border-[var(--accent)] cursor-pointer transition-colors duration-200">
+              className="block w-full h-8 rounded-md text-[11px] font-medium text-[var(--accent)]
+                         hover:border-[var(--accent)] cursor-pointer transition-colors duration-200 bg-transparent border border-[var(--input-border-subtle)]">
               Limpar filtros
             </button>
           </div>
