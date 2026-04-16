@@ -252,9 +252,13 @@
   box-shadow: var(--shadow-popup) !important;
   padding: 0 !important;
   overflow: hidden !important;
+  color: var(--text-primary) !important;
 }
 
-.maplibregl-popup-tip { display: none !important; }
+.maplibregl-popup-tip {
+  display: none !important;
+  border: none !important;
+}
 
 .maplibregl-popup-close-button {
   color: var(--text-muted) !important;

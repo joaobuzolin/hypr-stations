@@ -287,7 +287,7 @@ export default function CellMap() {
       return `<span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:${c}12;color:${c}">${t}</span>`;
     }).join(' ');
 
-    const html = `<div style="font-family:Urbanist,sans-serif">
+    const html = `<div style="font-family:Urbanist,sans-serif;background:var(--bg-surface);color:var(--text-primary)">
       <div style="height:2px;background:${opColor}"></div>
       <div style="padding:18px 20px 0">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">

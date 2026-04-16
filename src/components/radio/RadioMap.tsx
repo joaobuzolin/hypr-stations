@@ -97,7 +97,7 @@ export default function RadioMap() {
     const c = s.tipo === 'FM' ? RADIO_COLORS.fm : RADIO_COLORS.am;
     const u = s.tipo === 'FM' ? 'MHz' : 'kHz';
     const row = (l: string, v: string) => `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)"><div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted);margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
-    const html = `<div style="font-family:Urbanist,sans-serif">
+    const html = `<div style="font-family:Urbanist,sans-serif;background:var(--bg-surface);color:var(--text-primary)">
       <div style="height:2px;background:${c}"></div>
       <div style="padding:18px 20px 0">
         <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
