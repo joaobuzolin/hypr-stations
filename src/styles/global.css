@@ -183,6 +183,11 @@
   }
 }
 
+/* DominancePanel: hover only when not focused */
+button[style*="--op-hover"]:not([data-focused]):hover {
+  background: var(--op-hover) !important;
+}
+
 /* Animations */
 
 @keyframes fadeUp {

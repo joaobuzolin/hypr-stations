@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import { MAP_CENTER, MAP_ZOOM, MAP_TILES } from '../../lib/constants';
 
 interface MapContainerProps {

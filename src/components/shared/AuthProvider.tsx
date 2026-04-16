@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
 import { HYPR_CLIENT_ID, HYPR_DOMAIN } from '../../lib/constants';
 
 interface HyprUser {
@@ -53,31 +53,41 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   }, []);
 
-  // Initialize Google Identity Services
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (typeof google !== 'undefined' && google.accounts) {
-        google.accounts.id.initialize({
-          client_id: HYPR_CLIENT_ID,
-          callback: onCredential,
-          auto_select: false,
-        });
-      }
-    };
-    document.head.appendChild(script);
-    return () => { script.remove(); };
+  // Load Google Identity Services script on demand
+  const gsiReady = useRef(false);
+  const gsiLoading = useRef(false);
+
+  const loadGsi = useCallback((): Promise<void> => {
+    if (gsiReady.current) return Promise.resolve();
+    if (gsiLoading.current) {
+      return new Promise(resolve => {
+        const check = setInterval(() => { if (gsiReady.current) { clearInterval(check); resolve(); } }, 100);
+      });
+    }
+    gsiLoading.current = true;
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.onload = () => {
+        if (typeof google !== 'undefined' && google.accounts) {
+          google.accounts.id.initialize({
+            client_id: HYPR_CLIENT_ID,
+            callback: onCredential,
+            auto_select: false,
+          });
+          gsiReady.current = true;
+        }
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
   }, [onCredential]);
 
-  const login = useCallback(() => {
+  const login = useCallback(async () => {
     if (user) return;
-    if (typeof google === 'undefined' || !google.accounts) {
-      alert('Carregando autenticação Google. Tente novamente em alguns segundos.');
-      return;
-    }
+    await loadGsi();
+    if (typeof google === 'undefined' || !google.accounts) return;
     google.accounts.id.prompt((notification: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
         const tmp = document.createElement('div');
@@ -93,7 +103,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(() => tmp.remove(), 30000);
       }
     });
-  }, [user]);
+  }, [user, loadGsi]);
 
   const logout = useCallback(() => {
     if (confirm('Logado como ' + user?.email + '.\nDeseja sair?')) {

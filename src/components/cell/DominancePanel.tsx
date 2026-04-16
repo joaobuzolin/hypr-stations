@@ -84,11 +84,12 @@ export default function DominancePanel({ zoom, onOptionsChange }: Props) {
           return (
             <button key={o.op} onClick={() => handleFocusOp(o.op)}
               className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-[8px] cursor-pointer transition-all duration-150 w-full text-left border-0 outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent)]"
-              style={isFocused
-                ? { background: `${color}15`, border: `0.5px solid ${color}30` }
-                : { background: 'transparent', border: '0.5px solid transparent' }}
-              onMouseEnter={e => { if (!isFocused) (e.currentTarget as HTMLElement).style.background = hoverBg; }}
-              onMouseLeave={e => { if (!isFocused) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+              data-focused={isFocused || undefined}
+              style={{
+                background: isFocused ? `${color}15` : 'transparent',
+                border: isFocused ? `0.5px solid ${color}30` : '0.5px solid transparent',
+                '--op-hover': hoverBg,
+              } as React.CSSProperties}>
               <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: color }} />
               <span className="text-[12px] font-medium flex-1" style={{ color: isFocused ? color : textPrimary }}>
                 {o.op}

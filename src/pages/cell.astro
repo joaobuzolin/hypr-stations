@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CellPage from '../components/cell/CellPage';
 ---
 
-<BaseLayout title="Cell Map" description="Mapa de ERBs e cobertura celular do Brasil" fullscreen>
+<BaseLayout title="Cell Map" description="Mapa interativo de ERBs e cobertura celular do Brasil" fullscreen>
+  <link slot="head" rel="stylesheet" href="/assets/maplibre-gl.css" />
   <CellPage client:load />
 </BaseLayout>

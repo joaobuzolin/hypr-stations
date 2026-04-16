@@ -55,6 +55,9 @@ const {
   <style>
     @import '../styles/global.css';
   </style>
+
+  <!-- Per-page head content -->
+  <slot name="head" />
 </head>
 <body class:list={[fullscreen && 'h-screen overflow-hidden']}>
   <slot />

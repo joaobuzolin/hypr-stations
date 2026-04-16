@@ -31,7 +31,7 @@ import { MAPS } from '../lib/constants';
 
         {/* Stats */}
         <div class="mb-9">
-          <HubStats client:load />
+          <HubStats client:visible />
         </div>
 
         {/* Map cards */}
@@ -39,7 +39,6 @@ import { MAPS } from '../lib/constants';
           {Object.values(MAPS).map((map, i) => (
             <div style={`animation: fadeUp 0.5s ease ${0.22 + i * 0.05}s both`}>
               <MapCard
-                client:load
                 name={map.name}
                 subtitle={map.subtitle}
                 description={map.description}

@@ -4,5 +4,6 @@ import RadioPage from '../components/radio/RadioPage';
 ---
 
 <BaseLayout title="Radio Map" description="Mapa interativo de estações FM e AM do Brasil" fullscreen>
+  <link slot="head" rel="stylesheet" href="/assets/maplibre-gl.css" />
   <RadioPage client:load />
 </BaseLayout>

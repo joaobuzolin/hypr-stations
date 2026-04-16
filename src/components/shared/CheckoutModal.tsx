@@ -181,7 +181,7 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
                    className="flex items-center gap-2.5 p-3.5 rounded-[10px] bg-[var(--bg-surface2)]
                               border-[0.5px] border-[var(--border)] hover:border-[var(--accent)]
                               transition-colors duration-200 no-underline">
-                  <img src={`/assets/${ex.img}`} alt={ex.name}
+                  <img src={`/assets/${ex.img}`} alt={ex.name} width={36} height={36} loading="lazy"
                        className="w-9 h-9 rounded-full object-cover shrink-0"
                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   <div>
