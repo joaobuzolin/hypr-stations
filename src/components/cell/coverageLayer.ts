@@ -8,7 +8,7 @@ const FILL_LAYER = 'coverage-circles-fill';
 const LINE_LAYER = 'coverage-circles-line';
 
 function erbToCircleCoords(e: ERB): number[][] | null {
-  const radiusKm = estimateCellRadius(e.tech_principal, e.freq_mhz[0]);
+  const radiusKm = estimateCellRadius(e.tech_principal, e.freq_mhz?.[0] ?? 0);
   if (radiusKm <= 0 || radiusKm > 50) return null; // Skip unreasonable radii
 
   const steps = 48;

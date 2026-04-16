@@ -44,7 +44,7 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
       if (!e.tecnologias.some(t => fl.techs.has(t))) return false;
       if (fl.operadoras.size && !fl.operadoras.has(e.prestadora_norm)) return false;
       if (fl.ufs.size && !fl.ufs.has(e.uf)) return false;
-      if (fl.faixas.size && !e.faixas.some(b => fl.faixas.has(b))) return false;
+      if (fl.faixas.size && !e.faixas?.some(b => fl.faixas.has(b))) return false;
       if (cn) {
         const mun = e.municipio.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         if (!mun.includes(cn)) return false;

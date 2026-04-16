@@ -25,7 +25,7 @@ function downloadCSV(erbs: ERB[], cart: Set<number>) {
     h.join(','),
     ...sel.map(e => [
       e.prestadora_norm, e.uf, `"${e.municipio}"`, e.lat, e.lng,
-      e.tech_principal, `"${e.tecnologias.join(';')}"`, `"${e.faixas.join(';')}"`, e.coord_source,
+      e.tech_principal, `"${e.tecnologias.join(';')}"`, `"${e.faixas?.join(';')}"`, e.coord_source,
     ].join(',')),
   ];
   const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -301,8 +301,8 @@ export default function CellMap() {
 
     const opColor = OPERADORA_COLORS[e.prestadora_norm] || '#7a6e64';
     const techColor = TECH_COLORS[e.tech_principal] || '#576773';
-    const radius = estimateCellRadius(e.tech_principal, e.freq_mhz[0]);
-    const aud = estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz[0]);
+    const radius = estimateCellRadius(e.tech_principal, e.freq_mhz?.[0] ?? 0);
+    const aud = estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0);
 
     const row = (l: string, v: string) =>
       `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)"><div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted);margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
@@ -323,7 +323,7 @@ export default function CellMap() {
         <div style="margin-bottom:10px">${techBadges}</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px">
-        ${row('Faixas', e.faixas.map(f => f + ' MHz').join(', ') || '—')}
+        ${row('Faixas', e.faixas?.map(f => f + ' MHz').join(', ') || '—')}
         ${row('Alcance estimado', '~' + Math.round(radius) + ' km')}
         ${row('Coordenadas', e.coord_source === 'anatel' ? 'Anatel (real)' : 'Centróide IBGE')}
         ${row('Azimutes', e.azimutes.length ? e.azimutes.join('° · ') + '°' : '—')}
@@ -436,15 +436,15 @@ export default function CellMap() {
   const summary = useMemo(() => {
     if (!cart.size) return null;
     const sel = allErbs.filter(e => cart.has(e.id));
-    const a = sel.reduce((s, e) => s + estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz[0]), 0);
+    const a = sel.reduce((s, e) => s + estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0), 0);
     const u = [...new Set(sel.map(e => e.uf))];
     return <span><strong className="text-[var(--text-primary)] font-semibold">{formatAudience(a)}</strong> devices · {u.length} UFs</span>;
   }, [cart, allErbs]);
 
   const ckStations = useMemo(() =>
     allErbs.filter(e => cart.has(e.id)).map(e => ({
-      tipo: e.tech_principal, frequencia: e.faixas[0] || '', municipio: e.municipio, uf: e.uf,
-      audience: estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz[0]),
+      tipo: e.tech_principal, frequencia: e.faixas?.[0] || '', municipio: e.municipio, uf: e.uf,
+      audience: estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0),
     })), [cart, allErbs]);
 
   // ─── Legend counts ──────────────────────────────

@@ -14,9 +14,9 @@ export interface ERB {
   coord_source: string;
   tecnologias: string[];
   tech_principal: string;
-  freq_mhz: number[];
-  faixas: string[];
-  azimutes: number[];
+  freq_mhz?: number[];
+  faixas?: string[];
+  azimutes?: number[];
 }
 
 // ─── Fetch all ERBs (parallel pagination) ────────
@@ -26,8 +26,8 @@ export async function fetchERBs(onProgress?: (loaded: number) => void): Promise<
   if (_cache) return _cache;
 
   // Light columns for map — skip logradouro, azimutes, emissoes for speed
-  const cols = 'id,prestadora_norm,num_estacao,uf,municipio,cod_municipio,lat,lng,coord_source,tecnologias,tech_principal,freq_mhz,faixas';
-  const pageSize = 10000;
+  const cols = 'id,prestadora_norm,num_estacao,uf,municipio,cod_municipio,lat,lng,coord_source,tecnologias,tech_principal';
+  const pageSize = 1000; // PostgREST max_rows default
 
   // First, get total count
   const { count } = await supabase
@@ -38,14 +38,15 @@ export async function fetchERBs(onProgress?: (loaded: number) => void): Promise<
   if (total === 0) return [];
 
   const pages = Math.ceil(total / pageSize);
-  const all: (ERB | null)[] = new Array(total).fill(null);
+  const chunks: ERB[][] = new Array(pages).fill(null);
   let loaded = 0;
 
-  // Fetch pages in parallel (max 4 concurrent)
-  const concurrency = 4;
+  // Fetch pages in parallel (6 concurrent — fast but safe)
+  const concurrency = 6;
   for (let start = 0; start < pages; start += concurrency) {
     const batch = [];
     for (let i = start; i < Math.min(start + concurrency, pages); i++) {
+      const pageIdx = i;
       const from = i * pageSize;
       batch.push(
         supabase
@@ -59,9 +60,7 @@ export async function fetchERBs(onProgress?: (loaded: number) => void): Promise<
               return;
             }
             if (data) {
-              for (let j = 0; j < data.length; j++) {
-                all[from + j] = data[j] as ERB;
-              }
+              chunks[pageIdx] = data as ERB[];
               loaded += data.length;
               onProgress?.(loaded);
             }
@@ -71,7 +70,7 @@ export async function fetchERBs(onProgress?: (loaded: number) => void): Promise<
     await Promise.all(batch);
   }
 
-  const result = all.filter(Boolean) as ERB[];
+  const result = chunks.filter(Boolean).flat();
   _cache = result;
   console.log(`[CellData] Loaded ${result.length} ERBs`);
   return result;
