@@ -130,8 +130,6 @@
     --on-accent: #000000;
     --overlay: rgba(0, 0, 0, 0.55);
     --overlay-panel: rgba(22, 29, 36, 0.95);
-    /* V2 compat — remove after migration */
-    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
   }
 
   html.light {
@@ -155,8 +153,6 @@
     --on-accent: #ffffff;
     --overlay: rgba(0, 0, 0, 0.30);
     --overlay-panel: rgba(255, 255, 255, 0.95);
-    /* V2 compat — remove after migration */
-    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
   }
 
   body {
@@ -188,12 +184,6 @@
     font-weight: 500;
     letter-spacing: 0.03em;
     color: var(--text-muted);
-  }
-
-  /* V2 compat — will be removed after full migration */
-  .text-micro {
-    font-size: 11px;
-    line-height: 1.45;
   }
 
   .overlay-panel {

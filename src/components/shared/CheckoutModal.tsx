@@ -82,7 +82,7 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
 
   if (!open) return null;
 
-  const inputCls = "w-full px-3 py-2 rounded-lg text-xs bg-[var(--bg-surface2)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent)] transition-colors";
+  const inputCls = "w-full px-3.5 py-2.5 rounded-[10px] text-[12px] bg-[var(--bg-surface2)] border-[0.5px] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[rgba(77,184,212,0.3)] transition-colors";
 
   return (
     <div className="fixed inset-0 z-[3500] flex items-start justify-center p-5 overflow-y-auto
@@ -93,16 +93,16 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
 
         {/* Close */}
         <button onClick={onClose} aria-label="Fechar"
-                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-[var(--bg-surface2)]
-                           text-[var(--text-muted)] hover:text-[var(--text-primary)]
-                           flex items-center justify-center text-sm cursor-pointer transition-colors">
+                className="absolute top-4 right-4 w-7 h-7 rounded-lg bg-[var(--bg-surface2)]
+                           text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface3)]
+                           flex items-center justify-center text-[13px] cursor-pointer transition-all duration-150">
           ×
         </button>
 
         {/* KPIs */}
         <div className="text-center mb-5">
-          <h3 className="font-heading text-lg font-bold text-[var(--text-primary)]">Montar plano</h3>
-          <p className="text-[11px] text-[var(--text-muted)] mt-1">Revise a seleção e envie via WhatsApp</p>
+          <h3 className="font-heading text-[18px] font-semibold text-[var(--text-primary)]">Montar plano</h3>
+          <p className="text-[12px] text-[var(--text-muted)] mt-1.5">Revise a seleção e envie via WhatsApp</p>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-5">
@@ -111,15 +111,15 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
             { value: formatAudience(kpis.audience), label: 'Devices est.' },
             { value: kpis.ufs.toString(), label: 'UFs' },
           ].map(k => (
-            <div key={k.label} className="bg-[var(--bg-surface2)] rounded-lg p-3 text-center">
-              <div className="font-heading text-lg font-bold text-[var(--accent)]">{k.value}</div>
-              <div className="text-[9px] uppercase tracking-wide text-[var(--text-muted)] mt-0.5">{k.label}</div>
+            <div key={k.label} className="bg-[var(--bg-surface2)] rounded-[10px] p-4 text-center">
+              <div className="font-heading text-lg font-semibold text-[var(--accent)]">{k.value}</div>
+              <div className="text-[11px] text-[var(--text-muted)] mt-1">{k.label}</div>
             </div>
           ))}
         </div>
 
         {/* Station list preview */}
-        <div className="max-h-36 overflow-y-auto border border-[var(--border)] rounded-lg mb-5">
+        <div className="max-h-36 overflow-y-auto border-[0.5px] border-[var(--border)] rounded-[10px] mb-5">
           {stations.sort((a, b) => b.audience - a.audience).slice(0, 30).map((s, i) => (
             <div key={i} className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border)] last:border-b-0 text-xs">
               <span className={`font-semibold ${s.tipo === 'FM' ? 'text-[var(--accent)]' : 'text-[var(--color-gold-400)]'}`}>
@@ -133,7 +133,7 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
 
         {step === 'form' ? (
           <>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)] mb-3">
+            <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-3">
               Seus dados
             </div>
             <div className="grid gap-2 mb-4">
@@ -152,37 +152,37 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
             </div>
             {error && <p className="text-xs text-[var(--color-red-400)] text-center mb-3">{error}</p>}
             <button onClick={submit}
-                    className="w-full py-2.5 rounded-lg bg-[var(--accent)] text-[var(--on-accent)]
-                               font-heading font-bold text-sm cursor-pointer hover:opacity-90 transition-opacity">
+                    className="w-full py-3 rounded-[10px] bg-[var(--accent)] text-[var(--on-accent)]
+                               font-heading font-semibold text-[13px] cursor-pointer hover:opacity-90 transition-opacity">
               Continuar
             </button>
           </>
         ) : (
           <>
-            <div className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)] mb-3">
+            <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-3">
               Escolha um executivo para contato via WhatsApp
             </div>
             <div className="grid grid-cols-2 gap-2">
               {EXECS.map(ex => (
                 <a key={ex.phone} href={`https://wa.me/${ex.phone}?text=${waMessage}`}
                    target="_blank" rel="noopener"
-                   className="flex items-center gap-2.5 p-3 rounded-lg bg-[var(--bg-surface2)]
-                              border border-[var(--border)] hover:border-[var(--accent)]
-                              transition-colors no-underline">
+                   className="flex items-center gap-2.5 p-3.5 rounded-[10px] bg-[var(--bg-surface2)]
+                              border-[0.5px] border-[var(--border)] hover:border-[var(--accent)]
+                              transition-colors duration-200 no-underline">
                   <img src={`/assets/${ex.img}`} alt={ex.name}
                        className="w-9 h-9 rounded-full object-cover shrink-0"
                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   <div>
                     <div className="text-xs font-semibold text-[var(--text-primary)] leading-tight">{ex.name}</div>
-                    <div className="text-[10px] text-[var(--text-muted)]">Executivo HYPR</div>
+                    <div className="text-[11px] text-[var(--text-muted)]">Executivo HYPR</div>
                   </div>
                 </a>
               ))}
             </div>
             <button onClick={onClose}
-                    className="w-full mt-4 py-2 rounded-lg border border-[var(--border)]
-                               text-xs text-[var(--text-muted)] hover:text-[var(--accent)]
-                               cursor-pointer transition-colors">
+                    className="w-full mt-4 py-2.5 rounded-[10px] border-[0.5px] border-[var(--border)]
+                               text-[12px] text-[var(--text-muted)] hover:text-[var(--accent)]
+                               cursor-pointer transition-colors duration-200">
               Fechar
             </button>
           </>

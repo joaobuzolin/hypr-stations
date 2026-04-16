@@ -192,16 +192,16 @@ export default function RadioMap() {
     {/* Mobile drawer */}
     {drawerOpen && (<>
       <div className="fixed inset-0 z-[1500] bg-[var(--overlay)]" style={{ backdropFilter:'blur(2px)' }} onClick={() => setDrawerOpen(false)} />
-      <div className="fixed bottom-0 left-0 right-0 z-[1600] bg-[var(--bg-surface)] rounded-t-2xl border-t border-[var(--border)] max-h-[85vh] flex flex-col animate-[slideUp_0.3s_cubic-bezier(0.32,0.72,0,1)]">
-        <div className="w-9 h-1 bg-[var(--border)] rounded-full mx-auto mt-3" />
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
-          <span className="text-sm font-semibold text-[var(--text-primary)]">Filtros</span>
-          <button onClick={() => setDrawerOpen(false)} className="w-7 h-7 rounded-full bg-[var(--bg-surface2)] text-[var(--text-muted)] flex items-center justify-center cursor-pointer">×</button>
+      <div className="fixed bottom-0 left-0 right-0 z-[1600] bg-[var(--bg-surface)] rounded-t-[16px] border-t border-[var(--border)] max-h-[85vh] flex flex-col animate-[slideUp_0.3s_cubic-bezier(0.32,0.72,0,1)]">
+        <div className="w-9 h-1 bg-[var(--border-hover)] rounded-full mx-auto mt-3" />
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border)]">
+          <span className="text-[13px] font-semibold text-[var(--text-primary)]">Filtros</span>
+          <button onClick={() => setDrawerOpen(false)} className="w-7 h-7 rounded-lg bg-[var(--bg-surface2)] text-[var(--text-muted)] hover:bg-[var(--bg-surface3)] flex items-center justify-center cursor-pointer text-[13px] transition-colors">×</button>
         </div>
         <div className="overflow-y-auto flex-1">
           <RadioFilters stations={allStations} onFilter={onFilter} />
-          <div className="p-4"><button onClick={() => setDrawerOpen(false)}
-            className="w-full py-2.5 rounded-lg bg-[var(--accent)] text-[var(--on-accent)] font-heading font-bold text-sm cursor-pointer">Aplicar</button></div>
+          <div className="p-5"><button onClick={() => setDrawerOpen(false)}
+            className="w-full py-3 rounded-[10px] bg-[var(--accent)] text-[var(--on-accent)] font-heading font-semibold text-[13px] cursor-pointer hover:opacity-90 transition-opacity">Aplicar</button></div>
         </div>
       </div>
     </>)}
