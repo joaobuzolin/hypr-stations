@@ -467,7 +467,8 @@ export default function CellMap() {
           <DominancePanel zoom={mapZoom} onOptionsChange={handleDomOptsChange} />
         )}
 
-        {/* Legend */}
+        {/* Legend — hidden in dominance mode (panel has the info) */}
+        {viewMode !== 'dominance' && (
         <div className="absolute bottom-3.5 right-3.5 z-10 rounded-[10px] border-[0.5px] px-4 py-3 pointer-events-none overlay-panel">
           {viewMode === 'heatmap' ? (<>
             <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2">Densidade</div>
@@ -479,10 +480,6 @@ export default function CellMap() {
             <div className="flex justify-between text-[11px] text-[var(--text-faint)]">
               <span>Baixa</span><span>Alta</span>
             </div>
-          </>) : viewMode === 'dominance' ? (<>
-            <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2">Dominância</div>
-            <div className="text-[11px] text-[var(--text-muted)] mb-1">Cor = operadora com mais ERBs na região</div>
-            <div className="text-[11px] text-[var(--text-faint)]">Opacidade = grau de domínio</div>
           </>) : (<>
             <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2.5">Operadoras</div>
             {Object.entries(opCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([op, n]) => (
@@ -495,6 +492,7 @@ export default function CellMap() {
           </>)}
           <div className="text-[11px] text-[var(--text-faint)] mt-2">Anatel · Fev/2026</div>
         </div>
+        )}
 
         {/* Loading overlay */}
         {loading && (

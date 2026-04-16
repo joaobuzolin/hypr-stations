@@ -36,49 +36,52 @@ export default function DominancePanel({ zoom, onOptionsChange }: Props) {
   if (!stats.byOperator.length) return null;
 
   return (
-    <div className="absolute top-16 right-3.5 z-10 w-[240px] rounded-[12px] overflow-hidden
-                    border-[0.5px] border-[var(--border)] overlay-panel">
-      {/* Tech filter */}
-      <div className="flex gap-1 p-2 border-b border-[var(--border)]">
-        {TECH_OPTS.map(t => (
-          <button key={t.value} onClick={() => handleTechChange(t.value)}
-            className={`flex-1 py-[5px] rounded-[7px] text-[11px] font-medium cursor-pointer transition-all duration-150 border-0 outline-none
-              ${techFilter === t.value
-                ? 'bg-[var(--accent)] text-[var(--on-accent)]'
-                : 'bg-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]'}`}>
-            {t.label}
-          </button>
-        ))}
+    <div className="absolute top-16 right-3.5 z-10 w-[250px] rounded-[12px] overflow-hidden border-[0.5px] border-[var(--border)]"
+      style={{ background: 'rgba(15, 20, 25, 0.97)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+
+      {/* Tech filter pills */}
+      <div className="flex gap-1.5 p-2.5 border-b border-[var(--border)]">
+        {TECH_OPTS.map(t => {
+          const on = techFilter === t.value;
+          return (
+            <button key={t.value} onClick={() => handleTechChange(t.value)}
+              className="flex-1 py-[6px] rounded-[7px] text-[11px] font-semibold cursor-pointer transition-all duration-150 border-0 outline-none"
+              style={on
+                ? { background: '#4db8d4', color: '#000' }
+                : { background: 'rgba(255,255,255,0.04)', color: '#576773' }}>
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Header */}
       <div className="px-3.5 py-2.5 border-b border-[var(--border)]">
-        <div className="text-[10px] tracking-[0.04em] uppercase text-[var(--text-faint)]">
+        <div className="text-[10px] tracking-[0.04em] uppercase" style={{ color: '#3d4d58' }}>
           {focusOp ? `Foco: ${focusOp}` : 'Dominância por região'}
         </div>
-        <div className="text-[11px] text-[var(--text-muted)] mt-0.5">
+        <div className="text-[11px] mt-0.5" style={{ color: '#576773' }}>
           {stats.totalHexes.toLocaleString('pt-BR')} regiões · {stats.totalErbs.toLocaleString('pt-BR')} ERBs
         </div>
       </div>
 
       {/* Operator list */}
-      <div className="px-2 py-2 flex flex-col gap-0.5 max-h-[260px] overflow-y-auto">
+      <div className="px-2 py-2 flex flex-col gap-0.5 max-h-[280px] overflow-y-auto">
         {stats.byOperator.map(o => {
           const color = OPERADORA_COLORS[o.op] || OPERADORA_COLORS['Outras'];
           const isFocused = focusOp === o.op;
           return (
             <button key={o.op} onClick={() => handleFocusOp(o.op)}
-              className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] cursor-pointer transition-all duration-150 w-full text-left border-0 outline-none
-                ${isFocused
-                  ? 'bg-[var(--accent-muted)] border-[0.5px] border-[var(--accent-glow)]'
-                  : 'bg-transparent hover:bg-[var(--hover-bg)]'}`}
-              style={isFocused ? { borderColor: `${color}30` , background: `${color}0a` } : {}}>
+              className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-[8px] cursor-pointer transition-all duration-150 w-full text-left border-0 outline-none"
+              style={isFocused
+                ? { background: `${color}15`, border: `0.5px solid ${color}30` }
+                : { background: 'transparent' }}>
               <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: color }} />
-              <span className="text-[12px] font-medium flex-1" style={{ color: isFocused ? color : 'var(--text-primary)' }}>
+              <span className="text-[12px] font-medium flex-1" style={{ color: isFocused ? color : '#e8ecf0' }}>
                 {o.op}
               </span>
-              <span className="text-[10px] text-[var(--text-faint)]">{o.hexCount} reg.</span>
-              <span className="text-[10px] font-medium" style={{ color }}>{(o.pct * 100).toFixed(1)}%</span>
+              <span className="text-[10px]" style={{ color: '#3d4d58' }}>{o.hexCount} reg.</span>
+              <span className="text-[10px] font-semibold" style={{ color }}>{(o.pct * 100).toFixed(1)}%</span>
             </button>
           );
         })}
@@ -86,41 +89,40 @@ export default function DominancePanel({ zoom, onOptionsChange }: Props) {
 
       {/* Focus stats */}
       {focusStats && focusOp && (
-        <div className="px-3.5 py-3 border-t border-[var(--border)]">
-          <div className="flex gap-2 mb-2">
-            <div className="flex-1 rounded-[8px] py-2 px-2.5 text-center" style={{ background: 'rgba(92,184,122,0.08)' }}>
-              <div className="text-[16px] font-semibold" style={{ color: '#5cb87a' }}>{focusStats.wins}</div>
-              <div className="text-[9px] tracking-[0.04em] uppercase text-[var(--text-faint)]">Ganha</div>
+        <div className="px-3 py-3 border-t border-[var(--border)]">
+          <div className="flex gap-2 mb-2.5">
+            <div className="flex-1 rounded-[8px] py-2.5 text-center" style={{ background: 'rgba(92,184,122,0.1)' }}>
+              <div className="text-[18px] font-bold" style={{ color: '#5cb87a' }}>{focusStats.wins}</div>
+              <div className="text-[9px] tracking-[0.04em] uppercase" style={{ color: '#3d4d58' }}>Ganha</div>
             </div>
-            <div className="flex-1 rounded-[8px] py-2 px-2.5 text-center" style={{ background: 'rgba(232,84,84,0.08)' }}>
-              <div className="text-[16px] font-semibold" style={{ color: '#e85454' }}>{focusStats.losses}</div>
-              <div className="text-[9px] tracking-[0.04em] uppercase text-[var(--text-faint)]">Perde</div>
+            <div className="flex-1 rounded-[8px] py-2.5 text-center" style={{ background: 'rgba(232,84,84,0.1)' }}>
+              <div className="text-[18px] font-bold" style={{ color: '#e85454' }}>{focusStats.losses}</div>
+              <div className="text-[9px] tracking-[0.04em] uppercase" style={{ color: '#3d4d58' }}>Perde</div>
             </div>
           </div>
-          <div className="text-[11px] text-[var(--text-secondary)]">
-            <strong className="text-[var(--text-primary)]">{focusStats.pctDomination}%</strong> de domínio territorial
+          <div className="text-[11px]" style={{ color: '#8899a6' }}>
+            <strong style={{ color: '#e8ecf0' }}>{focusStats.pctDomination}%</strong> de domínio territorial
           </div>
           {focusStats.topRival && (
-            <div className="text-[11px] text-[var(--text-muted)] mt-1">
+            <div className="text-[11px] mt-1" style={{ color: '#576773' }}>
               Maior rival: <span style={{ color: OPERADORA_COLORS[focusStats.topRival] || '#7a6e64', fontWeight: 600 }}>{focusStats.topRival}</span>
             </div>
           )}
-          {/* Legend */}
           <div className="flex items-center gap-1.5 mt-3">
-            <span className="text-[9px] text-[var(--text-faint)]">Perde</span>
+            <span className="text-[9px]" style={{ color: '#3d4d58' }}>Perde</span>
             <div className="flex-1 h-[4px] rounded-full" style={{
               background: 'linear-gradient(to right, #e85454, rgba(232,84,84,0.15), transparent, rgba(92,184,122,0.15), #5cb87a)'
             }} />
-            <span className="text-[9px] text-[var(--text-faint)]">Ganha</span>
+            <span className="text-[9px]" style={{ color: '#3d4d58' }}>Ganha</span>
           </div>
         </div>
       )}
 
-      {/* Footer */}
+      {/* Footer hint */}
       {!focusOp && (
         <div className="px-3.5 py-2 border-t border-[var(--border)]">
-          <div className="text-[10px] text-[var(--text-faint)]">
-            Clique numa operadora para ver onde ganha e perde
+          <div className="text-[10px]" style={{ color: '#3d4d58' }}>
+            Clique numa operadora para análise comparativa
           </div>
         </div>
       )}
