@@ -22,7 +22,7 @@ export default function ViewModeSelector({ mode, onChange }: Props) {
                         transition-all duration-200 cursor-pointer
                         ${on
                           ? 'bg-[var(--accent-muted)] text-[var(--accent)]'
-                          : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.03)]'}`}>
+                          : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]'}`}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d={m.icon} /></svg>
             {m.label}

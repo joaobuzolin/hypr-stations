@@ -39,7 +39,7 @@ export default function HubSearch() {
                    bg-[var(--bg-surface)] border border-[var(--border)]
                    text-[var(--text-primary)] placeholder:text-[var(--text-faint)]
                    outline-none transition-all duration-300
-                   focus:border-[rgba(77,184,212,0.3)] focus:bg-[var(--bg-surface2)]"
+                   focus:border-[var(--accent)] focus:bg-[var(--bg-surface2)]"
       />
       <kbd className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none
                       text-[11px] text-[var(--text-faint)] bg-[var(--bg-surface2)]

@@ -90,7 +90,7 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 cursor-pointer"
                 style={on
                   ? { color: c, background: c + '12', border: `1px solid ${c}40` }
-                  : { color: 'var(--text-faint)', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)' }
+                  : { color: 'var(--text-faint)', background: 'transparent', border: '1px solid var(--input-border-subtle)' }
                 }>
                 <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: on ? c : 'var(--text-faint)' }} />
                 {op}
@@ -127,7 +127,7 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
               <label htmlFor={`cc-${uid}`} className="block text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-1.5">Cidade</label>
               <input id={`cc-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
                 placeholder="Buscar município..."
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', boxSizing: 'border-box' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', boxSizing: 'border-box' }}
                 className="block w-full max-w-full h-8 px-3 rounded-md text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200" />
             </div>
 
@@ -135,7 +135,7 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
               selected={f.faixas} onChange={faixas => upd({ faixas })} searchable={false} />
 
             <button onClick={reset} type="button"
-              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', boxSizing: 'border-box' }}
+              style={{ background: 'none', border: '1px solid var(--input-border-subtle)', boxSizing: 'border-box' }}
               className="block w-full max-w-full h-8 rounded-md text-[11px] font-medium text-[var(--accent)]
                          hover:border-[var(--accent)] cursor-pointer transition-colors duration-200">
               Limpar filtros

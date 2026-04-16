@@ -130,6 +130,13 @@
     --on-accent: #000000;
     --overlay: rgba(0, 0, 0, 0.55);
     --overlay-panel: rgba(22, 29, 36, 0.95);
+    --input-bg: rgba(255, 255, 255, 0.04);
+    --input-border: rgba(255, 255, 255, 0.10);
+    --input-border-subtle: rgba(255, 255, 255, 0.08);
+    --hover-bg: rgba(255, 255, 255, 0.03);
+    --control-border: rgba(255, 255, 255, 0.14);
+    --shadow-dropdown: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --shadow-popup: 0 12px 40px rgba(0, 0, 0, 0.25);
   }
 
   html.light {
@@ -153,6 +160,13 @@
     --on-accent: #ffffff;
     --overlay: rgba(0, 0, 0, 0.30);
     --overlay-panel: rgba(255, 255, 255, 0.95);
+    --input-bg: rgba(0, 0, 0, 0.03);
+    --input-border: rgba(0, 0, 0, 0.12);
+    --input-border-subtle: rgba(0, 0, 0, 0.08);
+    --hover-bg: rgba(0, 0, 0, 0.03);
+    --control-border: rgba(0, 0, 0, 0.18);
+    --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.10);
+    --shadow-popup: 0 12px 40px rgba(0, 0, 0, 0.12);
   }
 
   body {
@@ -235,7 +249,7 @@
   background: var(--bg-surface) !important;
   border: 0.5px solid var(--border) !important;
   border-radius: 14px !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: var(--shadow-popup) !important;
   padding: 0 !important;
   overflow: hidden !important;
 }

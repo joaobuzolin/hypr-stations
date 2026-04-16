@@ -82,7 +82,7 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
 
   if (!open) return null;
 
-  const inputCls = "w-full px-3.5 py-2.5 rounded-[10px] text-[12px] bg-[var(--bg-surface2)] border-[0.5px] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[rgba(77,184,212,0.3)] transition-colors";
+  const inputCls = "w-full px-3.5 py-2.5 rounded-[10px] text-[12px] bg-[var(--bg-surface2)] border-[0.5px] border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors";
 
   return (
     <div className="fixed inset-0 z-[3500] flex items-start justify-center p-5 overflow-y-auto

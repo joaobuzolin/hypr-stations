@@ -33,9 +33,9 @@ export default function CellStationList({ erbs, cart, activeIdx, onFocus, onTogg
               onKeyDown={ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onFocus(i); } }}
               className={`px-5 py-3 cursor-pointer border-l-2 transition-all duration-150
                 outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent)] focus-visible:ring-inset
-                ${sel ? 'bg-[rgba(77,184,212,0.04)] border-l-[var(--accent)]'
+                ${sel ? 'bg-[var(--accent-muted)] border-l-[var(--accent)]'
                   : act ? 'bg-[var(--bg-surface2)] border-l-[var(--accent)]'
-                  : 'border-l-transparent hover:bg-[rgba(255,255,255,0.02)]'}`}>
+                  : 'border-l-transparent hover:bg-[var(--hover-bg)]'}`}>
               <div className="flex items-center gap-3">
                 <button onClick={ev => { ev.stopPropagation(); onToggleCart(e.id); }}
                   aria-label={sel ? `Remover ${e.prestadora_norm}` : `Adicionar ${e.prestadora_norm}`}

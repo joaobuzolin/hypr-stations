@@ -13,7 +13,7 @@ export default function ToggleGroup({ label, options, active, onChange }: Toggle
             className="flex-1 h-[30px] rounded-md text-[11px] font-semibold tracking-[0.02em] transition-all duration-200 cursor-pointer"
             style={on
               ? { background: c + '14', border: `1px solid ${c}35`, color: c }
-              : { background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-faint)' }
+              : { background: 'transparent', border: '1px solid var(--input-border-subtle)', color: 'var(--text-faint)' }
             }>
             {opt.label}
           </button>

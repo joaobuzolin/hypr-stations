@@ -30,8 +30,8 @@ export default function MultiSelect({ label, placeholder, options, selected, onC
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="listbox" aria-labelledby={lid}
         className="w-full max-w-full flex items-center gap-1.5 h-8 px-3 rounded-md text-left text-[12px] transition-all duration-200 cursor-pointer"
         style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: open ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.10)',
+          background: 'var(--input-bg)',
+          border: open ? '1px solid var(--accent)' : '1px solid var(--input-border)',
           boxSizing: 'border-box',
         }}>
         {selected.size === 0
@@ -51,13 +51,13 @@ export default function MultiSelect({ label, placeholder, options, selected, onC
       {open && (
         <div className="relative z-50">
           <div className="absolute top-1 left-0 right-0 rounded-lg overflow-hidden"
-            style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--control-border)', boxShadow: 'var(--shadow-dropdown)' }}>
             {searchable && options.length > 6 && (
               <div className="p-2 border-b border-[var(--border)]">
                 <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..."
                   aria-label={`Buscar em ${label}`} autoFocus
                   className="w-full px-2.5 py-1.5 rounded text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border-subtle)' }} />
               </div>)}
             <div role="listbox" aria-labelledby={lid} className="max-h-44 overflow-y-auto">
               {filtered.map(opt => {
@@ -65,10 +65,10 @@ export default function MultiSelect({ label, placeholder, options, selected, onC
                 return (
                   <button key={opt} type="button" role="option" aria-selected={on} onClick={() => toggle(opt)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-left transition-colors duration-150 cursor-pointer bg-transparent border-none
-                      ${on ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.03)]'}`}>
+                      ${on ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]'}`}>
                     <span className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 transition-all duration-150
                       ${on ? 'bg-[var(--accent)]' : ''}`}
-                      style={on ? {} : { border: '1px solid rgba(255,255,255,0.15)' }}
+                      style={on ? {} : { border: '1px solid var(--control-border)' }}
                       aria-hidden="true">
                       {on && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
                     </span>{opt}
