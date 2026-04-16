@@ -6,46 +6,51 @@ interface HeaderProps {
   showAuth?: boolean;
 }
 
+const NAV_ITEMS = [
+  { label: 'Hub', href: '/' },
+  { label: 'Radio map', href: '/radio' },
+  { label: 'Cell map', href: '/cell' },
+];
+
 function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between px-6 h-14 border-b
-                        bg-[var(--bg-surface)] border-[var(--border)]
-                        transition-colors duration-250 shrink-0 z-50 relative">
+    <header
+      className="flex items-center h-14 px-7 border-b shrink-0 z-50 relative
+                 bg-[var(--bg-surface)] border-[var(--border)]
+                 transition-colors duration-300"
+    >
       {/* Logo */}
-      <a href="/" className="flex items-center gap-3 no-underline">
-        <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-[var(--on-accent)]">
+      <a href="/" className="flex items-center gap-[11px] no-underline shrink-0">
+        <div className="w-8 h-8 rounded-[9px] bg-[var(--accent)] flex items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[var(--on-accent)]">
             <path d="M4 6h4v12H4V6zm6 4h4v8h-4v-8zm6-2h4v10h-4V8z" fill="currentColor" />
           </svg>
         </div>
-        <div className="flex items-baseline gap-1.5">
-          <span className="font-heading text-sm font-bold tracking-wide text-[var(--text-primary)]">
+        <div className="flex items-baseline gap-0.5">
+          <span className="font-heading text-[14px] font-bold tracking-[0.01em] text-[var(--text-primary)]">
             HYPR
           </span>
-          <span className="font-heading text-sm font-semibold tracking-wide text-[var(--accent)]">
+          <span className="font-heading text-[14px] font-bold tracking-[0.01em] text-[var(--accent)]">
             Station
           </span>
         </div>
       </a>
 
       {/* Nav (desktop) */}
-      <nav className="hidden md:flex items-center gap-1">
-        {[
-          { label: 'Hub', href: '/' },
-          { label: 'Radio Map', href: '/radio' },
-          { label: 'Cell Map', href: '/cell' },
-        ].map((item) => {
-          const isActive = currentPage === item.href ||
+      <nav className="hidden md:flex items-center gap-1 ml-10">
+        {NAV_ITEMS.map((item) => {
+          const isActive =
+            currentPage === item.href ||
             (item.href !== '/' && currentPage?.startsWith(item.href));
           return (
             <a
               key={item.href}
               href={item.href}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium tracking-wide uppercase
-                transition-colors duration-150 no-underline
+              className={`px-[18px] py-2 rounded-lg text-[12px] font-medium tracking-[0.01em]
+                transition-all duration-200 no-underline
                 ${isActive
                   ? 'text-[var(--accent)] bg-[var(--accent-muted)]'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface2)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-surface2)]'
                 }`}
             >
               {item.label}
@@ -55,7 +60,7 @@ function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {
       </nav>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 ml-auto">
         {showAuth && <LoginButton />}
         <ThemeToggle />
       </div>

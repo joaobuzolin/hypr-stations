@@ -15,16 +15,16 @@ export default function SelectionBar({ count, summary, onCheckout, onDownload, c
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-0 left-0 right-0 z-[1400] border-t px-5 py-3
-                 flex items-center gap-3
+      className="fixed bottom-0 left-0 right-0 z-[1400] border-t px-7 py-3.5
+                 flex items-center gap-4
                  bg-[var(--bg-surface)] border-[var(--border)]
                  animate-[slideUp_0.3s_cubic-bezier(0.32,0.72,0,1)]"
     >
-      <span className="font-heading text-xl font-extrabold text-[var(--accent)]">
+      <span className="font-heading text-[22px] font-bold text-[var(--accent)] tracking-[-0.01em]">
         {count}
       </span>
 
-      <div className="text-xs text-[var(--text-muted)] leading-snug">
+      <div className="text-[12px] text-[var(--text-secondary)] leading-snug">
         {summary}
       </div>
 
@@ -33,12 +33,12 @@ export default function SelectionBar({ count, summary, onCheckout, onDownload, c
           <button
             onClick={onDownload}
             aria-label="Exportar seleção como CSV"
-            className="flex items-center gap-1 px-4 py-2 rounded-lg border
-                       text-xs font-bold tracking-wide transition-all cursor-pointer
+            className="flex items-center gap-1.5 px-5 py-2.5 rounded-[10px] border-[0.5px]
+                       text-[12px] font-semibold transition-all duration-200 cursor-pointer
                        bg-transparent border-[var(--accent)] text-[var(--accent)]
                        hover:bg-[var(--accent-muted)]"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
@@ -48,8 +48,8 @@ export default function SelectionBar({ count, summary, onCheckout, onDownload, c
         )}
         <button
           onClick={onCheckout}
-          className="flex items-center gap-1 px-5 py-2 rounded-lg
-                     text-xs font-bold tracking-wide transition-all cursor-pointer
+          className="flex items-center gap-1.5 px-6 py-2.5 rounded-[10px]
+                     text-[12px] font-semibold transition-all duration-200 cursor-pointer
                      bg-[var(--accent)] text-[var(--on-accent)]
                      hover:opacity-90"
         >
