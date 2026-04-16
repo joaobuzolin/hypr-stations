@@ -300,7 +300,6 @@ export default function CellMap() {
     if (popupRef.current) popupRef.current.remove();
 
     const opColor = OPERADORA_COLORS[e.prestadora_norm] || '#7a6e64';
-    const techColor = TECH_COLORS[e.tech_principal] || '#576773';
     const radius = estimateCellRadius(e.tech_principal, e.freq_mhz?.[0] ?? 0);
     const aud = estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0);
 
@@ -323,17 +322,14 @@ export default function CellMap() {
         <div style="margin-bottom:10px">${techBadges}</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px">
-        ${row('Faixas', e.faixas?.map(f => f + ' MHz').join(', ') || '—')}
         ${row('Alcance estimado', '~' + Math.round(radius) + ' km')}
-        ${row('Coordenadas', e.coord_source === 'anatel' ? 'Anatel (real)' : 'Centróide IBGE')}
-        ${row('Azimutes', e.azimutes.length ? e.azimutes.join('° · ') + '°' : '—')}
+        ${row('Coordenadas', `${e.lat.toFixed(4)}, ${e.lng.toFixed(4)}`)}
       </div>
       ${aud > 0 ? `<div style="background:var(--bg-surface2);border-radius:10px;padding:16px;text-align:center;margin:10px 20px">
         <div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted)">População estimada no raio</div>
         <div style="font-weight:700;font-size:20px;color:var(--accent);margin-top:5px;letter-spacing:-0.01em">${formatAudience(aud)} devices</div>
       </div>` : ''}
-      ${e.logradouro ? `<div style="font-size:11px;color:var(--text-faint);margin:8px 20px 0">${e.logradouro}</div>` : ''}
-      <div style="font-size:11px;color:var(--text-faint);text-align:center;margin:8px 20px 14px;opacity:0.6">Fonte: Anatel/SMP · Modelo HYPR</div>
+      <div style="font-size:11px;color:var(--text-faint);text-align:center;margin:8px 20px 14px;opacity:0.6">Fonte: Anatel Fev/2026 · Modelo HYPR</div>
     </div>`;
 
     const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '360px', offset: 10 })
