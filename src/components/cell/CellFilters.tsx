@@ -91,11 +91,11 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
                   upd({ operadoras: n.size === filterOptions.operadoras.length ? new Set() : n });
                 }
               }}
-                className={`flex items-center gap-[6px] px-3 py-[5px] rounded-lg text-[11px] font-medium
+                className={`flex items-center gap-[6px] px-2.5 py-[4px] rounded-lg text-[11px] font-medium
                             transition-all duration-200 cursor-pointer border-[0.5px]
-                            ${on ? 'border-current' : 'border-transparent opacity-35'}`}
-                style={on ? { color: c, background: c + '0F' } : { color: 'var(--text-muted)', background: 'var(--bg-surface2)' }}>
-                <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: c }} />
+                            ${on ? 'border-current' : 'border-[var(--border)] text-[var(--text-faint)]'}`}
+                style={on ? { color: c, background: c + '0F' } : {}}>
+                <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: on ? c : 'var(--text-faint)' }} />
                 {op}
               </button>
             );
@@ -123,7 +123,7 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
         </button>
 
         {advOpen && (
-          <div className="flex flex-col gap-2.5 mt-4">
+          <div className="flex flex-col gap-4 mt-5">
             <MultiSelect label="Estado (UF)" placeholder="Todos os estados" options={filterOptions.ufs}
               selected={f.ufs} onChange={ufs => upd({ ufs })} />
 
@@ -131,16 +131,17 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
               <label htmlFor={`cc-${uid}`} className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">Cidade</label>
               <input id={`cc-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
                 placeholder="Buscar município..."
-                className="w-full h-[34px] px-3 rounded-lg text-[12px] bg-[var(--bg-surface2)] border-[0.5px] border-[var(--border)]
+                className="w-full h-[32px] px-3 rounded-lg text-[12px] bg-transparent border-[0.5px] border-[var(--border-hover)]
                            text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none
-                           focus:border-[rgba(77,184,212,0.3)] transition-colors" />
+                           focus:border-[var(--accent)] focus:bg-[var(--bg-surface2)] transition-all duration-200" />
             </div>
 
             <MultiSelect label="Faixa (MHz)" placeholder="Todas" options={filterOptions.faixas}
               selected={f.faixas} onChange={faixas => upd({ faixas })} searchable={false} />
 
             <button onClick={reset}
-              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors py-1 text-center">
+              className="text-[11px] font-medium text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity py-1.5 text-center
+                         border-[0.5px] border-[var(--border)] rounded-lg hover:border-[var(--accent)]">
               Limpar filtros
             </button>
           </div>

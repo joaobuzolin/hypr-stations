@@ -16,8 +16,9 @@ export default function StationList({ stations, cart, activeIdx, onFocus, onTogg
           <strong className="text-[var(--accent)] font-semibold">{totalCount.toLocaleString('pt-BR')}</strong> estações
         </span>
         <span className="ml-auto" />
-        <button onClick={onSelectAll} className="text-[11px] text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity font-medium whitespace-nowrap">
-          Selecionar tudo</button>
+        <button onClick={onSelectAll} className="text-[11px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors font-medium whitespace-nowrap">
+          Sel. tudo</button>
+        <span className="text-[var(--border-hover)]">·</span>
         <button onClick={onClearCart} className="text-[11px] text-[var(--text-muted)] hover:text-[var(--color-red-400)] cursor-pointer transition-colors whitespace-nowrap">
           Limpar</button>
       </div>

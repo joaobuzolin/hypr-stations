@@ -16,9 +16,9 @@ const TYPE_OPTS = [
   { value: 'OM', label: 'AM/OM', color: RADIO_COLORS.am },
 ];
 
-const inputCls = `w-full h-[34px] px-3 rounded-lg text-[12px] bg-[var(--bg-surface2)] border-[0.5px] border-[var(--border)]
+const inputCls = `w-full h-[32px] px-3 rounded-lg text-[12px] bg-transparent border-[0.5px] border-[var(--border-hover)]
                   text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none
-                  focus:border-[rgba(77,184,212,0.3)] transition-colors`;
+                  focus:border-[var(--accent)] focus:bg-[var(--bg-surface2)] transition-all duration-200`;
 
 export default function RadioFilters({ stations, onFilter }: Props) {
   const uid = useId();
@@ -89,7 +89,7 @@ export default function RadioFilters({ stations, onFilter }: Props) {
         </button>
 
         {advOpen && (
-          <div className="flex flex-col gap-2.5 mt-4">
+          <div className="flex flex-col gap-4 mt-5">
             <div className="flex flex-col gap-1.5">
               <label htmlFor={`c-${uid}`} className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">Cidade</label>
               <input id={`c-${uid}`} value={f.cidade} onChange={e => upd({ cidade: e.target.value })}
@@ -110,7 +110,8 @@ export default function RadioFilters({ stations, onFilter }: Props) {
                 placeholder="Jovem Pan, Band, CBN..." className={inputCls} />
             </div>
             <button onClick={reset}
-              className="text-[11px] text-[var(--text-muted)] hover:text-[var(--accent)] cursor-pointer transition-colors py-1 text-center">
+              className="text-[11px] font-medium text-[var(--accent)] hover:opacity-70 cursor-pointer transition-opacity py-1.5 text-center
+                         border-[0.5px] border-[var(--border)] rounded-lg hover:border-[var(--accent)]">
               Limpar filtros
             </button>
           </div>

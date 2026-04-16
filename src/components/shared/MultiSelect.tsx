@@ -28,9 +28,9 @@ export default function MultiSelect({ label, placeholder, options, selected, onC
     <div className="flex flex-col gap-1.5" ref={ref}>
       <label id={lid} className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)]">{label}</label>
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="listbox" aria-labelledby={lid}
-        className={`w-full flex items-center gap-1.5 h-[34px] px-3 rounded-lg border-[0.5px] text-left text-[12px] transition-all duration-200 cursor-pointer
-          bg-[var(--bg-surface2)] hover:border-[var(--border-hover)]
-          ${open ? 'border-[var(--accent)]' : 'border-[var(--border)]'}`}>
+        className={`w-full flex items-center gap-1.5 h-[32px] px-3 rounded-lg border-[0.5px] text-left text-[12px] transition-all duration-200 cursor-pointer
+          bg-transparent hover:border-[var(--border-active)]
+          ${open ? 'border-[var(--accent)] bg-[var(--bg-surface2)]' : 'border-[var(--border-hover)]'}`}>
         {selected.size === 0
           ? <span className="text-[var(--text-muted)] truncate">{placeholder}</span>
           : <div className="flex flex-wrap gap-1 flex-1 overflow-hidden">
