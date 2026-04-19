@@ -1,6 +1,5 @@
 import { memo, useEffect } from 'react';
 import { List, useListRef } from 'react-window';
-import { RADIO_COLORS } from '../../lib/constants';
 import { formatAudience, estimateRadioAudience } from '../../lib/audience';
 import type { RadioStation } from './radioData';
 
@@ -18,7 +17,7 @@ interface RowData {
   onToggleCart: (sid: number) => void;
 }
 
-const ROW_HEIGHT = 84;
+const ROW_HEIGHT = 88;
 
 const StationRow = memo(function StationRow({
   index, style, ariaAttributes, stations, cart, activeIdx, onFocus, onToggleCart,
@@ -31,46 +30,69 @@ const StationRow = memo(function StationRow({
   const aud = estimateRadioAudience(s.erp, s.tipo, s.classe, s.uf);
   const isFM = s.tipo === 'FM';
 
+  // Badge uses CSS vars that auto-adapt to theme
+  const badgeFg = isFM ? 'var(--radio-fm-fg)' : 'var(--radio-am-fg)';
+  const badgeBg = isFM ? 'var(--radio-fm-bg)' : 'var(--radio-am-bg)';
+
   return (
     <div style={style} {...ariaAttributes}>
       <div tabIndex={0}
         onClick={() => onFocus(index)}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFocus(index); } }}
         style={{ height: ROW_HEIGHT }}
-        className={`relative px-5 py-3 cursor-pointer transition-colors duration-150
+        className={`relative px-5 py-[14px] cursor-pointer transition-colors duration-150
           outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]
+          border-b-[0.5px] border-solid border-[var(--border-hover)]
           ${sel ? 'bg-[var(--accent-muted)]' : act ? 'bg-[var(--bg-surface2)]' : 'hover:bg-[var(--hover-bg)]'}`}>
 
-        {/* Bottom separator — inset shadow avoids box-model issues */}
-        <div className="absolute bottom-0 left-5 right-5 h-px bg-[var(--border)]" />
+        {/* Accent bar for selected state */}
+        {sel && (
+          <span aria-hidden="true"
+            className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--accent)]" />
+        )}
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-start">
           {/* Checkbox */}
           <button onClick={e => { e.stopPropagation(); onToggleCart(s._sid); }}
             aria-label={sel ? `Remover ${s.frequencia}` : `Adicionar ${s.frequencia}`}
-            className="w-[18px] h-[18px] mt-[3px] rounded-[5px] flex items-center justify-center shrink-0 cursor-pointer
+            className="w-5 h-5 mt-[1px] rounded-md flex items-center justify-center shrink-0 cursor-pointer
               transition-all duration-150 border-0 outline-none"
             style={sel
               ? { background: 'var(--accent)' }
               : { background: 'var(--input-bg)', border: '1.5px solid var(--control-border)' }}>
-            {sel && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+            {sel && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
           </button>
 
-          {/* Content */}
+          {/* Content — 3-line hierarchy */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-bold px-[7px] py-[2px] rounded-[4px] shrink-0 leading-none"
-                style={{ background: isFM ? RADIO_COLORS.fmBg : RADIO_COLORS.amBg, color: isFM ? RADIO_COLORS.fm : RADIO_COLORS.am }}>
+            {/* Line 1: Type badge + Frequency + audience (right) */}
+            <div className="flex items-center gap-2 leading-none">
+              <span className="text-[10px] font-bold px-[7px] py-[3px] rounded-[4px] shrink-0 leading-none tracking-[0.03em]"
+                style={{ background: badgeBg, color: badgeFg }}>
                 {s.tipo}
               </span>
-              <span className="text-[13px] font-semibold text-[var(--text-primary)] leading-none">
+              <span className="text-[13px] font-semibold text-[var(--text-primary)] leading-none tracking-[-0.005em]">
                 {s.frequencia}
               </span>
               <span className="text-[11px] text-[var(--text-muted)] leading-none">{isFM ? 'MHz' : 'kHz'}</span>
-              {aud > 0 && <span className="text-[11px] font-medium text-[var(--accent)] ml-auto shrink-0 leading-none">{formatAudience(aud)}</span>}
+              {aud > 0 && (
+                <span className="text-[11px] font-medium text-[var(--accent)] ml-auto shrink-0 leading-none">
+                  {formatAudience(aud)}
+                </span>
+              )}
             </div>
-            <div className="text-[12px] text-[var(--text-secondary)] leading-tight truncate">{s.municipio} — {s.uf}</div>
-            {s.entidade && <div className="text-[11px] text-[var(--text-muted)] leading-tight truncate mt-0.5">{s.entidade}</div>}
+
+            {/* Line 2: Município — UF */}
+            <div className="text-[12px] leading-tight truncate mt-[7px] text-[var(--text-primary)]">
+              {s.municipio} <span className="text-[var(--text-muted)]">— {s.uf}</span>
+            </div>
+
+            {/* Line 3: Entidade (optional) */}
+            {s.entidade && (
+              <div className="text-[11px] leading-tight truncate mt-[4px] text-[var(--text-muted)]">
+                {s.entidade}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -89,7 +111,7 @@ export default function StationList({ stations, cart, activeIdx, onFocus, onTogg
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-      <div className="flex items-center gap-2 px-5 h-10 border-b border-[var(--border)] shrink-0">
+      <div className="flex items-center gap-2 px-5 h-10 border-b border-[var(--border-hover)] shrink-0">
         <span className="text-[12px] text-[var(--text-secondary)]">
           <strong className="text-[var(--accent)] font-semibold">{totalCount.toLocaleString('pt-BR')}</strong> estações
           {cart.size > 0 && <span className="text-[var(--text-muted)]"> · <strong className="text-[var(--text-primary)] font-semibold">{cart.size}</strong> no plano</span>}

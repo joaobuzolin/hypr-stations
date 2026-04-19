@@ -1,6 +1,6 @@
 import { memo, useEffect } from 'react';
 import { List, useListRef } from 'react-window';
-import { OPERADORA_COLORS, TECH_COLORS } from '../../lib/constants';
+import { OPERADORA_COLORS } from '../../lib/constants';
 import type { ERB } from './cellData';
 
 interface Props {
@@ -17,7 +17,23 @@ interface RowData {
   onToggleCart: (id: number) => void;
 }
 
-const ROW_HEIGHT = 70;
+const ROW_HEIGHT = 88;
+
+// Tech badge — uses CSS vars that auto-adapt to light/dark mode
+function TechBadge({ tech }: { tech: string }) {
+  const key = tech.toLowerCase();
+  return (
+    <span
+      className="text-[10px] font-bold tracking-[0.03em] leading-none px-[7px] py-[3px] rounded-[4px] shrink-0"
+      style={{
+        color: `var(--tech-${key}-fg, var(--text-muted))`,
+        background: `var(--tech-${key}-bg, transparent)`,
+      }}
+    >
+      {tech}
+    </span>
+  );
+}
 
 const StationRow = memo(function StationRow({
   index, style, ariaAttributes, erbs, cart, activeIdx, onFocus, onToggleCart,
@@ -33,39 +49,46 @@ const StationRow = memo(function StationRow({
         onClick={() => onFocus(index)}
         onKeyDown={ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onFocus(index); } }}
         style={{ height: ROW_HEIGHT }}
-        className={`relative px-5 py-3 cursor-pointer transition-colors duration-150
+        className={`relative px-5 py-[14px] cursor-pointer transition-colors duration-150
           outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--accent)]
+          border-b-[0.5px] border-solid border-[var(--border-hover)]
           ${sel ? 'bg-[var(--accent-muted)]' : act ? 'bg-[var(--bg-surface2)]' : 'hover:bg-[var(--hover-bg)]'}`}>
 
-        <div className="absolute bottom-0 left-5 right-5 h-px bg-[var(--border)]" />
+        {/* Accent bar for selected state */}
+        {sel && (
+          <span aria-hidden="true"
+            className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--accent)]" />
+        )}
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-start">
           {/* Checkbox */}
           <button onClick={ev => { ev.stopPropagation(); onToggleCart(e.id); }}
             aria-label={sel ? `Remover ${e.prestadora_norm}` : `Adicionar ${e.prestadora_norm}`}
-            className="w-[18px] h-[18px] mt-[3px] rounded-[5px] flex items-center justify-center shrink-0 cursor-pointer
+            className="w-5 h-5 mt-[1px] rounded-md flex items-center justify-center shrink-0 cursor-pointer
               transition-all duration-150 border-0 outline-none"
             style={sel
               ? { background: 'var(--accent)' }
               : { background: 'var(--input-bg)', border: '1.5px solid var(--control-border)' }}>
-            {sel && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+            {sel && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
           </button>
 
-          {/* Content */}
+          {/* Content — 3-line hierarchy */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-[12px] font-semibold shrink-0 leading-none"
-                style={{ color: OPERADORA_COLORS[e.prestadora_norm] || OPERADORA_COLORS['Outras'] }}>
-                {e.prestadora_norm}
-              </span>
-              {e.tecnologias.map(t => (
-                <span key={t} className="text-[10px] font-bold px-[5px] py-[1px] rounded-[3px] shrink-0 leading-none"
-                  style={{ color: TECH_COLORS[t] || '#576773', background: (TECH_COLORS[t] || '#576773') + '12' }}>
-                  {t}
-                </span>
-              ))}
+            {/* Line 1: Operadora */}
+            <div className="text-[13px] font-semibold leading-none tracking-[-0.005em] truncate"
+              style={{ color: OPERADORA_COLORS[e.prestadora_norm] || OPERADORA_COLORS['Outras'] }}>
+              {e.prestadora_norm}
             </div>
-            <div className="text-[12px] text-[var(--text-secondary)] leading-tight truncate">{e.municipio} — {e.uf}</div>
+
+            {/* Line 2: Tech badges */}
+            <div className="flex gap-[5px] flex-wrap mt-[6px]">
+              {e.tecnologias.map(t => <TechBadge key={t} tech={t} />)}
+            </div>
+
+            {/* Line 3: Município — UF */}
+            <div className="text-[12px] leading-tight truncate mt-[7px] text-[var(--text-primary)]">
+              {e.municipio} <span className="text-[var(--text-muted)]">— {e.uf}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -84,7 +107,7 @@ export default function CellStationList({ erbs, cart, activeIdx, onFocus, onTogg
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-      <div className="flex items-center gap-2 px-5 h-10 border-b border-[var(--border)] shrink-0">
+      <div className="flex items-center gap-2 px-5 h-10 border-b border-[var(--border-hover)] shrink-0">
         <span className="text-[12px] text-[var(--text-secondary)]">
           <strong className="text-[var(--accent)] font-semibold">{totalCount.toLocaleString('pt-BR')}</strong> ERBs
           {cart.size > 0 && <span className="text-[var(--text-muted)]"> · <strong className="text-[var(--text-primary)] font-semibold">{cart.size}</strong> no plano</span>}

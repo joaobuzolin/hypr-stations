@@ -124,6 +124,22 @@
     --hover-bg: rgba(255, 255, 255, 0.03);
     --control-border: rgba(255, 255, 255, 0.14);
     --shadow-dropdown: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    /* Tech badge colors — used in DOM (list rows, popup, filters). Map layers use hex from constants.ts */
+    --tech-5g-fg: #e85454;
+    --tech-5g-bg: rgba(232, 84, 84, 0.10);
+    --tech-4g-fg: #4db8d4;
+    --tech-4g-bg: rgba(77, 184, 212, 0.10);
+    --tech-3g-fg: #d4c74a;
+    --tech-3g-bg: rgba(212, 199, 74, 0.10);
+    --tech-2g-fg: #8899a6;
+    --tech-2g-bg: rgba(87, 103, 115, 0.12);
+
+    /* Radio badge colors (FM/AM) — DOM-only */
+    --radio-fm-fg: #4db8d4;
+    --radio-fm-bg: rgba(77, 184, 212, 0.10);
+    --radio-am-fg: #d4c74a;
+    --radio-am-bg: rgba(212, 199, 74, 0.10);
   }
 
   html.light {
@@ -151,6 +167,22 @@
     --hover-bg: rgba(0, 0, 0, 0.03);
     --control-border: rgba(0, 0, 0, 0.18);
     --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.10);
+
+    /* Tech badge colors — darker shades for WCAG AA contrast on light bg */
+    --tech-5g-fg: #a32d2d;
+    --tech-5g-bg: rgba(163, 45, 45, 0.10);
+    --tech-4g-fg: #0f6e56;
+    --tech-4g-bg: rgba(15, 110, 86, 0.10);
+    --tech-3g-fg: #854f0b;
+    --tech-3g-bg: rgba(133, 79, 11, 0.10);
+    --tech-2g-fg: #576773;
+    --tech-2g-bg: rgba(87, 103, 115, 0.12);
+
+    /* Radio badge colors — darker shades for light mode */
+    --radio-fm-fg: #0f6e56;
+    --radio-fm-bg: rgba(15, 110, 86, 0.10);
+    --radio-am-fg: #854f0b;
+    --radio-am-bg: rgba(133, 79, 11, 0.10);
   }
 
   body {
