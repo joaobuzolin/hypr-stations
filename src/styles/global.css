@@ -251,78 +251,12 @@ button[style*="--op-hover"]:not([data-focused]):hover {
 
 /* MapLibre GL overrides */
 
-.maplibregl-popup {
-  z-index: 100;
-}
-
-/* Popup container is a visually neutral wrapper. All visual styling
-   (background, border-radius, shadow, color) lives on the inline HTML
-   div written by each openPopup helper. This avoids two CSS layers
-   with different backgrounds creating visible seams/rings around the
-   popup — a bug that plagued the previous implementation. */
-.maplibregl-popup-content,
-.maplibregl-popup-content *,
-.maplibregl-popup-content-wrapper {
-  border-color: transparent !important;
-}
-
-/* Belt-and-suspenders: nuke any default background/border on every
-   MapLibre popup wrapper level. The inline HTML div is the sole
-   source of visual styling. Any lingering white ring in dark mode
-   was coming from one of these layers. */
-.maplibregl-popup,
-.maplibregl-popup-content,
-.maplibregl-popup-content-wrapper,
-.maplibregl-popup-anchor-top,
-.maplibregl-popup-anchor-top-left,
-.maplibregl-popup-anchor-top-right,
-.maplibregl-popup-anchor-bottom,
-.maplibregl-popup-anchor-bottom-left,
-.maplibregl-popup-anchor-bottom-right,
-.maplibregl-popup-anchor-left,
-.maplibregl-popup-anchor-right {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.maplibregl-popup-content {
-  padding: 0 !important;
-  border-radius: 0 !important;
-  max-width: 340px !important;
-  overflow: visible !important; /* let inner div's shadow escape */
-  color: var(--text-primary) !important;
-}
-
-/* Tip (arrow) hidden — cleaner look, shadow flows uninterrupted */
-.maplibregl-popup-tip,
-.maplibregl-popup .maplibregl-popup-tip {
-  display: none !important;
-}
-
-/* Close button — themed via vars, lives on top of the inner card */
-.maplibregl-popup-close-button {
-  color: var(--text-muted) !important;
-  top: 10px !important;
-  right: 10px !important;
-  font-size: 18px !important;
-  width: 26px !important;
-  height: 26px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: transparent !important;
-  border: none !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
-  line-height: 1 !important;
-  z-index: 2 !important;
-}
-.maplibregl-popup-close-button:hover {
-  color: var(--text-primary) !important;
-  background: var(--bg-surface2) !important;
-}
+/* Popups are now React components (see MapOverlayPopup.tsx) positioned via
+   map.project(). No maplibregl.Popup instances exist in the app, so the
+   entire .maplibregl-popup-* CSS family has been removed. If you ever bring
+   maplibregl.Popup back, remember that its wrapper injects extra DOM layers
+   that fight app theme tokens — the React portal approach avoids that class
+   of bug entirely. */
 
 .maplibregl-ctrl-group {
   background: var(--overlay-panel) !important;

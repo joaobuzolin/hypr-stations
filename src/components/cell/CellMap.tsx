@@ -11,8 +11,11 @@ import MobileDrawer from '../shared/MobileDrawer';
 import ViewModeSelector from './ViewModeSelector';
 import DominancePanel from './DominancePanel';
 import CellLegend from './CellLegend';
+import MapOverlayPopup from '../shared/MapOverlayPopup';
+import ErbPinPopupContent from './ErbPinPopupContent';
+import HexPopupContent, { type HexPopupData } from './HexPopupContent';
 import { fetchERBs, getFilterOptions, type ERB } from './cellData';
-import { OPERADORA_COLORS, TECH_COLORS } from '../../lib/constants';
+import { OPERADORA_COLORS } from '../../lib/constants';
 import { formatAudience, estimateCellAudience, estimateCellRadius } from '../../lib/audience';
 import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, setErbsForDominance, getErbById, getErbIdsInVisibleHexes, buildHexToErbsMap, getHexCenter, getResolutionForZoom, DOMINANCE_LAYER_IDS, type DominanceOptions } from './analysisLayers';
 import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
@@ -46,9 +49,20 @@ export default function CellMap() {
   const [viewMode, setViewMode] = useState<string>('pins');
   const [showCoverage, setShowCoverage] = useState(false);
   const mapRef = useRef<MLMap | null>(null);
-  const popupRef = useRef<maplibregl.Popup | null>(null);
+  // Pin popup state — React-managed. The old maplibregl.Popup ref was
+  // replaced because its DOM wrappers fought the theme tokens (see
+  // MapOverlayPopup for the structural reason).
+  const [pinPopup, setPinPopup] = useState<{ erb: ERB; lngLat: [number, number] } | null>(null);
+  // Hex popup state — same reason. Data is frozen at click time (we need
+  // a snapshot of the hex's properties; re-reading them mid-interaction
+  // is undesirable because the source can be rebuilt on zoom).
+  const [hexPopup, setHexPopup] = useState<{ data: HexPopupData; lngLat: [number, number]; showDrill: boolean } | null>(null);
   const activeHexRef = useRef<string | null>(null);
   const hoveredHexRef = useRef<string | null>(null);
+  // onMapReady registers click handlers only once per map instance. The
+  // handler calls openHexPopup via ref so it always invokes the current
+  // closure (openHexPopup depends on nothing now, but keeping the ref
+  // pattern keeps the behavior robust against future refactors).
   const openHexPopupRef = useRef<((feat: maplibregl.MapGeoJSONFeature, lngLat: maplibregl.LngLat) => void) | null>(null);
   const viewModeRef = useRef<string>('pins');
   const coverageRef = useRef(false);
@@ -212,7 +226,7 @@ export default function CellMap() {
     const map = mapRef.current;
     if (map && viewModeRef.current === 'dominance') {
       // Close any open hex popup — the data (and hex visibility) is about to change
-      if (popupRef.current) popupRef.current.remove();
+      setHexPopup(null);
       activeHexRef.current = null;
       hoveredHexRef.current = null;
       forceRedrawDominance(map, opts);
@@ -358,7 +372,7 @@ export default function CellMap() {
         const newRes = getResolutionForZoom(map.getZoom());
         if (newRes !== lastRenderedRes) {
           // Hex under the old popup no longer exists in the new source
-          if (popupRef.current) popupRef.current.remove();
+          setHexPopup(null);
           activeHexRef.current = null;
           hoveredHexRef.current = null;
           lastRenderedRes = newRes;
@@ -378,62 +392,23 @@ export default function CellMap() {
   const openPopup = useCallback((idx: number, coords: [number, number]) => {
     const e = filteredRef.current[idx];
     if (!e || !mapRef.current) return;
-    if (popupRef.current) popupRef.current.remove();
-
-    const opColor = OPERADORA_COLORS[e.prestadora_norm] || '#7a6e64';
+    setHexPopup(null); // only one popup at a time
+    setPinPopup({ erb: e, lngLat: coords });
     const radius = estimateCellRadius(e.tech_principal, e.freq_mhz?.[0] ?? 0);
-    const aud = estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0);
-
-    const techBadges = e.tecnologias.map(t => {
-      const tc = TECH_COLORS[t] || '#576773';
-      return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:0.03em;background:${tc}15;color:${tc};border:0.5px solid ${tc}25">${t}</span>`;
-    }).join(' ');
-
-    const html = `<div style="font-family:Urbanist,system-ui,sans-serif;background:var(--bg-surface);color:var(--text-primary);border-radius:14px;box-shadow:var(--popup-shadow);overflow:hidden">
-      <div style="padding:20px 22px 16px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <div style="width:8px;height:8px;border-radius:50%;background:${opColor};flex-shrink:0"></div>
-          <span style="font-weight:700;font-size:16px;color:${opColor};letter-spacing:-0.01em">${e.prestadora_norm}</span>
-          <span style="font-size:10px;color:var(--text-faint);margin-left:auto;font-family:monospace;letter-spacing:0.02em">${e.num_estacao}</span>
-        </div>
-        <div style="font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:12px;margin-left:18px">${e.municipio} — ${e.uf}</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-left:18px">${techBadges}</div>
-      </div>
-      <div style="height:0.5px;background:var(--border);margin:0 22px"></div>
-      <div style="display:flex;padding:14px 22px;gap:24px">
-        <div>
-          <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px">Alcance</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text-primary)">~${Math.round(radius)} km</div>
-        </div>
-        <div>
-          <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px">Coordenadas</div>
-          <div style="font-size:12px;font-weight:500;color:var(--text-secondary);font-family:monospace">${e.lat.toFixed(4)}, ${e.lng.toFixed(4)}</div>
-        </div>
-      </div>
-      ${aud > 0 ? `
-      <div style="margin:0 14px 14px;padding:14px 16px;background:var(--accent-muted);border:0.5px solid var(--border);border-radius:10px;text-align:center">
-        <div style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">População no raio</div>
-        <div style="font-weight:700;font-size:18px;color:var(--accent);letter-spacing:-0.01em">${formatAudience(aud)} devices</div>
-      </div>` : ''}
-      <div style="font-size:10px;color:var(--text-faint);text-align:center;padding:0 22px 4px;opacity:0.6">Anatel Fev/2026 · Modelo HYPR</div>
-      <div style="padding:0 14px 14px">
-        <button data-cart-id="${e.id}" style="width:100%;padding:10px;border-radius:10px;font-size:12px;font-weight:600;font-family:Urbanist,sans-serif;cursor:pointer;transition:all 0.15s;border:0.5px solid ${cartRef.current.has(e.id) ? 'var(--color-red-400)' : 'var(--accent)'};background:${cartRef.current.has(e.id) ? 'transparent' : 'var(--accent)'};color:${cartRef.current.has(e.id) ? 'var(--color-red-400)' : 'var(--on-accent)'}">${cartRef.current.has(e.id) ? 'Remover do plano' : 'Adicionar ao plano'}</button>
-      </div>
-    </div>`;
-
-    const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '360px', offset: 10 })
-      .setLngLat(coords).setHTML(html).addTo(mapRef.current!);
-    const el = popup.getElement();
-    el?.querySelector('[data-cart-id]')?.addEventListener('click', () => {
-      toggleCart(e.id);
-      popup.remove();
-    });
-    popupRef.current = popup;
-    popup.on('close', () => { popupRef.current = null; });
-
     drawCoverageCircle(e, coords, radius);
   }, []);
 
+
+  const clearCoverageCircle = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const layerId = 'coverage-circle-fill';
+    const borderLayerId = 'coverage-circle-border';
+    const sourceId = 'coverage-circle';
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+    if (map.getLayer(borderLayerId)) map.removeLayer(borderLayerId);
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
+  }, []);
 
   const drawCoverageCircle = useCallback((e: ERB, center: [number, number], radiusKm: number) => {
     const map = mapRef.current;
@@ -466,15 +441,23 @@ export default function CellMap() {
     });
     map.addLayer({ id: layerId, type: 'fill', source: sourceId, paint: { 'fill-color': color, 'fill-opacity': 0.08 } });
     map.addLayer({ id: borderLayerId, type: 'line', source: sourceId, paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.4, 'line-dasharray': [4, 4] } });
-
-    if (popupRef.current) {
-      popupRef.current.on('close', () => {
-        if (map.getLayer(layerId)) map.removeLayer(layerId);
-        if (map.getLayer(borderLayerId)) map.removeLayer(borderLayerId);
-        if (map.getSource(sourceId)) map.removeSource(sourceId);
-      });
-    }
   }, []);
+
+  // Clear coverage circle whenever the pin popup closes
+  useEffect(() => {
+    if (!pinPopup) clearCoverageCircle();
+  }, [pinPopup, clearCoverageCircle]);
+
+  // When the hex popup closes, clear the hex's 'active' feature state so the
+  // highlight goes away. Runs whenever hexPopup transitions to null.
+  useEffect(() => {
+    if (hexPopup) return;
+    const mm = mapRef.current;
+    if (mm && activeHexRef.current && mm.getSource(DOMINANCE_LAYER_IDS.source)) {
+      try { mm.setFeatureState({ source: DOMINANCE_LAYER_IDS.source, id: activeHexRef.current }, { active: false }); } catch {}
+      activeHexRef.current = null;
+    }
+  }, [hexPopup]);
 
 
   // Add ERBs from a single hex to cart (honors focus/tech filters). Returns added count.
@@ -526,24 +509,23 @@ export default function CellMap() {
     else if (z < 12) targetZoom = 12.5;
     else return;
     map.flyTo({ center: [lng, lat], zoom: targetZoom, speed: 1.2 });
-    if (popupRef.current) popupRef.current.remove();
+    setHexPopup(null);
   }, []);
 
 
-  // Open popup with hex breakdown — operator shares, status, action buttons
+  // Open hex popup — snapshot props into React state, MapOverlayPopup renders it
   const openHexPopup = useCallback((feat: maplibregl.MapGeoJSONFeature, lngLat: maplibregl.LngLat) => {
     const map = mapRef.current;
     if (!map) return;
-    if (popupRef.current) popupRef.current.remove();
 
     const props = feat.properties || {};
     const h3Id = props.h3 as string;
     const dominant = props.dominant as string;
     const total = props.total as number;
     const dominantPct = props.dominantPct as number;
-    const status = (props.status as string | null) || null;
+    const status = (props.status as HexPopupData['status']) || null;
 
-    // Extract operator counts from properties (stored by addDominanceLayer via spread of h.o)
+    // Extract operator counts (set by addDominanceLayer spread of h.o)
     const opCounts: [string, number][] = [];
     for (const [k, v] of Object.entries(props)) {
       if (typeof v === 'number' && OPERADORA_COLORS[k]) {
@@ -553,120 +535,21 @@ export default function CellMap() {
     opCounts.sort((a, b) => b[1] - a[1]);
 
     const opts = domOptsRef.current;
-    const focusOp = opts.focusOp;
-    const rivalOp = opts.rivalOp;
-    const inPairMode = !!(focusOp && rivalOp);
-
-    const statusConfig: Record<string, { color: string; bg: string; label: string; labelPair: string }> = {
-      wins:      { color: '#5cb87a', bg: 'rgba(92,184,122,0.12)',  label: 'Domina',  labelPair: 'Vence' },
-      contested: { color: '#e88a4a', bg: 'rgba(232,138,74,0.12)',  label: 'Disputa', labelPair: 'Empate' },
-      absent:    { color: '#e85454', bg: 'rgba(232,84,84,0.12)',   label: 'Ausente', labelPair: 'Perde' },
+    const data: HexPopupData = {
+      h3Id, dominant, dominantPct, total, status, opCounts,
+      focusOp: opts.focusOp, rivalOp: opts.rivalOp,
     };
-    const statusBadge = (status && statusConfig[status]) ? (() => {
-      const cfg = statusConfig[status];
-      const label = inPairMode ? cfg.labelPair : cfg.label;
-      return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:${cfg.bg};color:${cfg.color}">${label}</span>`;
-    })() : '';
 
-    // Pair-mode head line: "Vivo 153 vs TIM 98"
-    const pairLine = inPairMode ? (() => {
-      const my = props[focusOp!] as number || 0;
-      const rv = props[rivalOp!] as number || 0;
-      const focusColor = OPERADORA_COLORS[focusOp!] || '#7a6e64';
-      const rivalColor = OPERADORA_COLORS[rivalOp!] || '#7a6e64';
-      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:10px 12px;background:var(--bg-surface2);border-radius:8px;font-size:12px">
-        <span style="color:${focusColor};font-weight:700">${focusOp}</span>
-        <strong style="color:var(--text-primary);font-variant-numeric:tabular-nums">${my}</strong>
-        <span style="color:var(--text-faint)">vs</span>
-        <span style="color:${rivalColor};font-weight:700">${rivalOp}</span>
-        <strong style="color:var(--text-primary);font-variant-numeric:tabular-nums">${rv}</strong>
-      </div>`;
-    })() : '';
-
-    // Proportional operator list (top 6)
-    const opRows = opCounts.slice(0, 6).map(([op, n]) => {
-      const pct = total > 0 ? Math.round((n / total) * 100) : 0;
-      const color = OPERADORA_COLORS[op] || OPERADORA_COLORS['Outras'];
-      const isFocus = op === focusOp;
-      const isRival = op === rivalOp;
-      const labelStyle = isFocus ? `font-weight:700;color:${color}` : isRival ? `font-weight:600;color:${color}` : 'color:var(--text-primary)';
-      return `<div style="display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px">
-        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0"></span>
-        <span style="${labelStyle};min-width:66px">${op}</span>
-        <div style="flex:1;height:4px;border-radius:2px;background:var(--input-bg);overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${color}"></div>
-        </div>
-        <span style="color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:58px;text-align:right">
-          <strong style="color:var(--text-primary);font-weight:600">${n}</strong> · ${pct}%
-        </span>
-      </div>`;
-    }).join('');
-
-    // Drill-down button shown while there's a deeper resolution to descend to
-    // (r3 -> r4 -> r5 -> r6 -> r7). Hidden once user is already at r7 (z >= 12).
-    const z = map.getZoom();
-    const showDrill = z < 12;
-
-    const html = `<div style="font-family:Urbanist,system-ui,sans-serif;min-width:280px;background:var(--bg-surface);color:var(--text-primary);border-radius:14px;box-shadow:var(--popup-shadow);overflow:hidden">
-      <div style="padding:16px 18px 12px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polygon points="21 16 21 8 12 3 3 8 3 16 12 21 21 16"/>
-          </svg>
-          <span style="font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);font-weight:600">Região</span>
-          ${statusBadge ? `<span style="margin-left:auto">${statusBadge}</span>` : ''}
-        </div>
-        <div style="font-size:13px;color:var(--text-primary);margin-bottom:12px">
-          <strong style="font-weight:600">${total.toLocaleString('pt-BR')}</strong>
-          <span style="color:var(--text-muted)"> ERBs · ${dominant} lidera com ${dominantPct}%</span>
-        </div>
-        ${pairLine}
-        ${opRows}
-      </div>
-      <div style="padding:10px 12px;border-top:0.5px solid var(--border);display:flex;gap:6px">
-        ${showDrill ? `<button data-action="drill" style="flex:0 0 auto;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;font-family:Urbanist,sans-serif;cursor:pointer;background:transparent;color:var(--text-secondary);border:0.5px solid var(--input-border);transition:all 0.15s">Aproximar</button>` : ''}
-        <button data-action="add-region" style="flex:1;padding:8px;border-radius:8px;font-size:11px;font-weight:700;font-family:Urbanist,sans-serif;cursor:pointer;background:var(--accent);color:var(--on-accent);border:0;transition:all 0.15s">Adicionar esta região</button>
-      </div>
-    </div>`;
-
-    const popup = new maplibregl.Popup({
-      closeButton: true,
-      closeOnClick: true,
-      maxWidth: '320px',
-      offset: 8,
-    }).setLngLat(lngLat).setHTML(html).addTo(map);
-
-    const el = popup.getElement();
-
-    el?.querySelector('[data-action="add-region"]')?.addEventListener('click', (ev) => {
-      const btn = ev.currentTarget as HTMLButtonElement;
-      const added = handleAddHexToCart(h3Id);
-      btn.textContent = added > 0 ? `+${added.toLocaleString('pt-BR')} no plano` : 'Já no plano';
-      btn.style.background = 'rgba(92,184,122,0.15)';
-      btn.style.color = '#5cb87a';
-      btn.style.border = '0.5px solid rgba(92,184,122,0.4)';
-      setTimeout(() => popup.remove(), 1400);
+    setPinPopup(null); // only one popup at a time
+    setHexPopup({
+      data,
+      lngLat: [lngLat.lng, lngLat.lat],
+      showDrill: map.getZoom() < 12,
     });
+  }, []);
 
-    el?.querySelector('[data-action="drill"]')?.addEventListener('click', () => {
-      handleDrillZoom(h3Id);
-    });
-
-    popupRef.current = popup;
-    popup.on('close', () => {
-      popupRef.current = null;
-      // Clear active state on the hex that was highlighted
-      const mm = mapRef.current;
-      if (mm && activeHexRef.current && mm.getSource(DOMINANCE_LAYER_IDS.source)) {
-        try { mm.setFeatureState({ source: DOMINANCE_LAYER_IDS.source, id: activeHexRef.current }, { active: false }); } catch {}
-        activeHexRef.current = null;
-      }
-    });
-  }, [handleAddHexToCart, handleDrillZoom]);
-
-  // Keep ref pointed at the latest openHexPopup so the one-time click handler
-  // registered in onMapReady always calls the current version. Synced in render
-  // body (not useEffect) so the ref is up-to-date before any event fires.
+  // Keep ref in sync with the latest openHexPopup. Sync in render body so
+  // the ref is up-to-date before any map event fires on the next frame.
   openHexPopupRef.current = openHexPopup;
 
 
@@ -785,6 +668,39 @@ export default function CellMap() {
             Raios {showCoverage ? 'ON' : 'OFF'}
           </button>
         )}
+
+        {/* React-rendered popups — pure app markup, no maplibregl.Popup involvement */}
+        <MapOverlayPopup
+          map={mapRef.current}
+          lngLat={pinPopup?.lngLat || null}
+          onClose={() => setPinPopup(null)}
+        >
+          {pinPopup && (
+            <ErbPinPopupContent
+              erb={pinPopup.erb}
+              inCart={cart.has(pinPopup.erb.id)}
+              onToggleCart={() => {
+                toggleCart(pinPopup.erb.id);
+                setPinPopup(null);
+              }}
+            />
+          )}
+        </MapOverlayPopup>
+
+        <MapOverlayPopup
+          map={mapRef.current}
+          lngLat={hexPopup?.lngLat || null}
+          onClose={() => setHexPopup(null)}
+        >
+          {hexPopup && (
+            <HexPopupContent
+              data={hexPopup.data}
+              showDrill={hexPopup.showDrill}
+              onDrill={() => handleDrillZoom(hexPopup.data.h3Id)}
+              onAddRegion={() => handleAddHexToCart(hexPopup.data.h3Id)}
+            />
+          )}
+        </MapOverlayPopup>
       </MapContainer>
     </div>
 

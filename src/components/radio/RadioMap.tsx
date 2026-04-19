@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import maplibregl from 'maplibre-gl';
 import type { Map as MLMap, GeoJSONSource } from 'maplibre-gl';
 import MapContainer from '../shared/MapContainer';
 import SelectionBar from '../shared/SelectionBar';
@@ -8,9 +7,11 @@ import { useAuth } from '../shared/AuthProvider';
 import RadioFilters from './RadioFilters';
 import StationList from './StationList';
 import MobileDrawer from '../shared/MobileDrawer';
+import MapOverlayPopup from '../shared/MapOverlayPopup';
+import RadioPinPopupContent from './RadioPinPopupContent';
 import { loadRadioData, type RadioStation, type RadioData } from './radioData';
 import { RADIO_COLORS } from '../../lib/constants';
-import { formatAudience, estimateRadioAudience, estimateRadioRadius, getRadioERP } from '../../lib/audience';
+import { formatAudience } from '../../lib/audience';
 import { downloadCSV } from '../../lib/csv';
 
 const RADIO_CSV_HEADERS = ['tipo','municipio','uf','frequencia','classe','categoria','erp','entidade','carater','finalidade','lat','lng'];
@@ -30,7 +31,9 @@ export default function RadioMap() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const mapRef = useRef<MLMap | null>(null);
-  const popupRef = useRef<maplibregl.Popup | null>(null);
+  // React-managed popup state (replaces the maplibregl.Popup pattern, which
+  // injected DOM wrappers that leaked light-theme backgrounds in dark mode).
+  const [popup, setPopup] = useState<{ station: RadioStation; lngLat: [number, number] } | null>(null);
 
   // Load station data on mount
   useEffect(() => {
@@ -100,55 +103,11 @@ export default function RadioMap() {
 
   const toggleCart = useCallback((sid: number) => { setCart(p => { const n = new Set(p); n.has(sid) ? n.delete(sid) : n.add(sid); return n; }); }, []);
 
-  // Popup — original style with border separators
   const openPopup = useCallback((idx: number, coords: [number, number]) => {
-    const s = filtered[idx]; if (!s || !mapRef.current) return;
-    if (popupRef.current) popupRef.current.remove();
-    const erp = getRadioERP(s.erp, s.classe);
-    const r = Math.round(estimateRadioRadius(erp, s.tipo));
-    const aud = estimateRadioAudience(s.erp, s.tipo, s.classe, s.uf);
-    const c = s.tipo === 'FM' ? RADIO_COLORS.fm : RADIO_COLORS.am;
-    const u = s.tipo === 'FM' ? 'MHz' : 'kHz';
-    const inCart = cart.has(s._sid);
-    const row = (l: string, v: string) => `<div style="padding:8px 0;border-bottom:0.5px solid var(--border)"><div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted);margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:500;color:var(--text-primary)">${v}</div></div>`;
-    const html = `<div style="font-family:Urbanist,sans-serif;background:var(--bg-surface);color:var(--text-primary);border-radius:14px;box-shadow:var(--popup-shadow);overflow:hidden">
-      <div style="height:2px;background:${c}"></div>
-      <div style="padding:18px 20px 0">
-        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
-          <span style="font-weight:700;font-size:20px;color:${c}">${s.frequencia}</span>
-          <span style="font-size:11px;color:var(--text-muted)">${u}</span>
-          <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${s._fantasy || s.tipo}</span>
-        </div>
-        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:10px">${s.municipio} — ${s.uf}</div>
-      </div>
-      <div style="padding:0 20px">
-        ${row('Entidade', s.entidade || '—')}
-        <div style="display:grid;grid-template-columns:1fr 1fr">
-          ${row('Classe', s.classe || '—')}${row('Categoria', s.categoria || '—')}
-          ${row('ERP / Alcance', erp.toLocaleString('pt-BR') + ' W (~' + r + ' km)')}${row('Finalidade', s.finalidade || '—')}
-          ${row('Caráter', s.carater || '—')}<div></div>
-        </div>
-      </div>
-      ${aud > 0 ? `<div style="background:var(--bg-surface2);border-radius:10px;padding:16px;text-align:center;margin:10px 20px">
-        <div style="font-size:11px;letter-spacing:0.02em;color:var(--text-muted)">Audiência estimada</div>
-        <div style="font-weight:700;font-size:20px;color:var(--accent);margin-top:5px;letter-spacing:-0.01em">${formatAudience(aud)} devices</div>
-      </div>` : ''}
-      <div style="padding:0 20px 14px">
-        <button data-cart-sid="${s._sid}" style="width:100%;padding:10px;border-radius:10px;font-size:12px;font-weight:600;font-family:Urbanist,sans-serif;cursor:pointer;transition:all 0.15s;border:0.5px solid ${inCart ? 'var(--color-red-400)' : 'var(--accent)'};background:${inCart ? 'transparent' : 'var(--accent)'};color:${inCart ? 'var(--color-red-400)' : 'var(--on-accent)'}">${inCart ? 'Remover do plano' : 'Adicionar ao plano'}</button>
-      </div>
-      <div style="font-size:11px;color:var(--text-muted);text-align:center;margin:0 20px 14px;opacity:0.5">Modelo HYPR: alcance × densidade × penetração × campanha 30d</div>
-    </div>`;
-    const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '340px', offset: 10 })
-      .setLngLat(coords).setHTML(html).addTo(mapRef.current!);
-    // Bind cart button via event delegation
-    const el = popup.getElement();
-    el?.querySelector('[data-cart-sid]')?.addEventListener('click', () => {
-      toggleCart(s._sid);
-      popup.remove();
-    });
-    popupRef.current = popup;
-    popup.on('close', () => { popupRef.current = null; });
-  }, [filtered, cart, toggleCart]);
+    const s = filtered[idx];
+    if (!s || !mapRef.current) return;
+    setPopup({ station: s, lngLat: coords });
+  }, [filtered]);
 
   const onFilter = useCallback((nf: RadioStation[]) => {
     setFiltered(nf);
@@ -226,6 +185,24 @@ export default function RadioMap() {
             <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-[9px] font-bold flex items-center justify-center">!</span>
           )}
         </button>
+
+        {/* React-rendered popup — pure app markup, no maplibregl.Popup involvement */}
+        <MapOverlayPopup
+          map={mapRef.current}
+          lngLat={popup?.lngLat || null}
+          onClose={() => setPopup(null)}
+        >
+          {popup && (
+            <RadioPinPopupContent
+              station={popup.station}
+              inCart={cart.has(popup.station._sid)}
+              onToggleCart={() => {
+                toggleCart(popup.station._sid);
+                setPopup(null);
+              }}
+            />
+          )}
+        </MapOverlayPopup>
       </MapContainer>
     </div>
 
