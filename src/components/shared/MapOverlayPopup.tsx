@@ -102,9 +102,24 @@ export default function MapOverlayPopup({
 
   const TIP_HEIGHT = 8;
   const cardLeft = pos.x;
-  const cardBottom = pos.y - offset;
   const measured = cardHeight !== null && cardHeight > 0;
-  const topPos = measured ? cardBottom - (cardHeight as number) : cardBottom;
+
+  // Auto-flip: if there isn't enough room above the anchor to fit the card
+  // (plus tip + small safety margin), render below the anchor instead.
+  // The tip's direction flips accordingly so it always points AT the pin.
+  //
+  // Space calc: pos.y is viewport-absolute. Space above the anchor within
+  // the visible area = pos.y. Needed = cardHeight + offset + tip + margin.
+  const SAFETY_MARGIN = 8;
+  const spaceAbove = pos.y;
+  const neededAbove = (cardHeight || 0) + offset + TIP_HEIGHT + SAFETY_MARGIN;
+  const flipDown = measured && spaceAbove < neededAbove;
+
+  // Position: when above (default), card's bottom sits `offset` px above
+  // the anchor. When flipped, card's top sits `offset` px below.
+  const topPos = flipDown
+    ? pos.y + offset
+    : measured ? pos.y - offset - (cardHeight as number) : pos.y - offset;
 
   return createPortal(
     <div
@@ -161,18 +176,23 @@ export default function MapOverlayPopup({
         {children}
       </div>
 
-      {/* Tip (chevron pointing down toward the anchor) */}
+      {/* Tip (chevron). Points down at anchor when card is above;
+          points up at anchor when card is below (flipped). */}
       <div
         style={{
           position: 'absolute',
-          left: '50%', bottom: -TIP_HEIGHT,
+          left: '50%',
+          [flipDown ? 'top' : 'bottom']: -TIP_HEIGHT,
           transform: 'translateX(-50%)',
           width: 16, height: TIP_HEIGHT,
           pointerEvents: 'none',
         }}
       >
         <svg width={16} height={TIP_HEIGHT} viewBox="0 0 16 8" style={{ display: 'block' }}>
-          <path d="M0 0 L8 8 L16 0 Z" fill="var(--bg-surface)" />
+          <path
+            d={flipDown ? 'M0 8 L8 0 L16 8 Z' : 'M0 0 L8 8 L16 0 Z'}
+            fill="var(--bg-surface)"
+          />
         </svg>
       </div>
     </div>,
