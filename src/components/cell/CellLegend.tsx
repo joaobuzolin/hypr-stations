@@ -4,11 +4,13 @@ import { OPERADORA_COLORS } from '../../lib/constants';
 interface Props {
   viewMode: string;
   opCounts: Record<string, number>;
+  /** Whether the bottom SelectionBar is visible; lifts the legend above it. */
+  hasSelectionBar?: boolean;
 }
 
 const LS_KEY = 'hypr-cell-legend-open';
 
-export default function CellLegend({ viewMode, opCounts }: Props) {
+export default function CellLegend({ viewMode, opCounts, hasSelectionBar = false }: Props) {
   const [open, setOpen] = useState(() => {
     if (typeof window === 'undefined') return true;
     const v = localStorage.getItem(LS_KEY);
@@ -27,8 +29,9 @@ export default function CellLegend({ viewMode, opCounts }: Props) {
 
   return (
     <div
-      className="absolute bottom-3.5 right-3.5 z-10 rounded-[10px] overflow-hidden"
+      className="absolute right-3.5 z-10 rounded-[10px] overflow-hidden transition-[bottom] duration-200"
       style={{
+        bottom: hasSelectionBar ? 84 : 14,
         background: 'var(--bg-surface)',
         border: '0.5px solid var(--border-hover)',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08)',

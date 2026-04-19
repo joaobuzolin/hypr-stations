@@ -169,7 +169,10 @@ export default function RadioMap() {
 
       <MapContainer onMapReady={onMapReady}>
         {/* Legend */}
-        <div className="absolute bottom-3.5 right-3.5 z-10 rounded-[10px] border-[0.5px] px-4 py-3 pointer-events-none overlay-panel">
+        {/* Legend */}
+        <div
+          style={{ bottom: cart.size > 0 ? 84 : 14 }}
+          className="absolute right-3.5 z-10 rounded-[10px] border-[0.5px] px-4 py-3 pointer-events-none overlay-panel transition-[bottom] duration-200">
           <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2.5">Legenda</div>
           <div className="flex items-center gap-2 text-[12px] text-[var(--text-primary)] mb-1.5">
             <span className="w-[7px] h-[7px] rounded-full" style={{ background: RADIO_COLORS.fm }} aria-hidden="true" /> FM — {fmN.toLocaleString('pt-BR')}

@@ -8,6 +8,9 @@ interface Props {
   onOptionsChange: (opts: DominanceOptions) => void;
   onAddVisibleToCart?: (opts: DominanceOptions, resKey: string, options: { includeAllOperators: boolean }) => Promise<number>;
   getVisibleErbCount?: (opts: DominanceOptions, resKey: string, options: { includeAllOperators: boolean }) => number;
+  /** Whether the bottom SelectionBar is visible (cart non-empty). When true the
+   *  panel reserves room above it. Prevents overlap in crowded viewports. */
+  hasSelectionBar?: boolean;
 }
 
 const TECH_OPTS: { value: 'all' | '5G' | '4G'; label: string }[] = [
@@ -25,7 +28,7 @@ const STATUS = {
   absent:    { color: '#e85454', bg: 'rgba(232,84,84,0.12)',  bgLight: 'rgba(232,84,84,0.06)' },
 };
 
-export default function DominancePanel({ zoom, onOptionsChange, onAddVisibleToCart, getVisibleErbCount }: Props) {
+export default function DominancePanel({ zoom, onOptionsChange, onAddVisibleToCart, getVisibleErbCount, hasSelectionBar = false }: Props) {
   const [open, setOpen] = useState(() => {
     if (typeof window === 'undefined') return true;
     const v = localStorage.getItem(LS_KEY);
@@ -161,13 +164,22 @@ export default function DominancePanel({ zoom, onOptionsChange, onAddVisibleToCa
   const totalCount = displayCounts.wins + displayCounts.contested + displayCounts.absent;
   const pctWins = totalCount > 0 ? Math.round((displayCounts.wins / totalCount) * 100) : 0;
 
+  // Panel layout reserves vertical space intelligently:
+  //  - top: fixed 80px (below ViewModeSelector)
+  //  - bottom: 14px when cart empty, 88px when SelectionBar is visible
+  // The outer container is flex-column with a fixed header (toggle button)
+  // and a scrollable body — if content exceeds the available height, the
+  // action button at the bottom stays visible while the middle scrolls.
+  const bottomGap = hasSelectionBar ? 88 : 14;
+
   return (
     <div
-      className="absolute top-20 right-3.5 z-10 w-[290px] rounded-[12px] overflow-hidden"
+      className="hidden md:flex absolute top-20 right-3.5 z-10 w-[290px] rounded-[12px] overflow-hidden flex-col"
       style={{
         background: 'var(--bg-surface)',
         border: '0.5px solid var(--border-hover)',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08)',
+        maxHeight: `calc(100vh - 80px - ${bottomGap}px)`,
       }}
     >
       {/* Toggle header — click to collapse/expand */}
@@ -217,7 +229,7 @@ export default function DominancePanel({ zoom, onOptionsChange, onAddVisibleToCa
       </button>
 
       {open && (
-        <div id="dom-panel-body">
+        <div id="dom-panel-body" className="overflow-y-auto min-h-0" style={{ scrollbarWidth: 'thin' }}>
           {/* Tech filter */}
           <div className="flex gap-1.5 px-3 pb-3 pt-1">
             {TECH_OPTS.map(t => {

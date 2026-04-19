@@ -633,11 +633,12 @@ export default function CellMap() {
             onOptionsChange={handleDomOptsChange}
             onAddVisibleToCart={handleAddVisibleToCart}
             getVisibleErbCount={handleGetVisibleErbCount}
+            hasSelectionBar={cart.size > 0}
           />
         )}
 
         {/* Legend — hidden in dominance mode (panel has the info) */}
-        <CellLegend viewMode={viewMode} opCounts={opCounts} />
+        <CellLegend viewMode={viewMode} opCounts={opCounts} hasSelectionBar={cart.size > 0} />
 
         {/* Loading overlay */}
         {loading && (
@@ -665,7 +666,8 @@ export default function CellMap() {
         {/* Coverage radius toggle */}
         {viewMode === 'pins' && !loading && (
           <button onClick={toggleCoverage} aria-label="Raios de cobertura" aria-pressed={showCoverage}
-            className={`absolute bottom-3.5 left-3.5 z-10 flex items-center gap-2 px-4 py-2 rounded-[10px] border-[0.5px] text-[11px] font-medium cursor-pointer transition-all duration-200
+            style={{ bottom: cart.size > 0 ? 84 : 14 }}
+            className={`absolute left-3.5 z-10 flex items-center gap-2 px-4 py-2 rounded-[10px] border-[0.5px] text-[11px] font-medium cursor-pointer transition-all duration-200
               ${showCoverage
                 ? 'bg-[var(--accent-muted)] border-[var(--accent)] text-[var(--accent)]'
                 : 'overlay-panel text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]'}`}>
