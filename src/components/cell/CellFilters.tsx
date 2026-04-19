@@ -7,14 +7,13 @@ import type { ERB } from './cellData';
 interface Props {
   erbs: ERB[];
   onFilter: (filtered: ERB[]) => void;
-  filterOptions: { ufs: string[]; operadoras: string[]; faixas: string[] };
+  filterOptions: { ufs: string[]; operadoras: string[] };
 }
 
 interface CellFilterState {
   techs: Set<string>;
   operadoras: Set<string>;
   ufs: Set<string>;
-  faixas: Set<string>;
   cidade: string;
 }
 
@@ -29,7 +28,6 @@ const INITIAL: CellFilterState = {
   techs: new Set(['5G', '4G', '3G', '2G']),
   operadoras: new Set(),
   ufs: new Set(),
-  faixas: new Set(),
   cidade: '',
 };
 
@@ -44,7 +42,6 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
       if (!e.tecnologias.some(t => fl.techs.has(t))) return false;
       if (fl.operadoras.size && !fl.operadoras.has(e.prestadora_norm)) return false;
       if (fl.ufs.size && !fl.ufs.has(e.uf)) return false;
-      if (fl.faixas.size && !e.faixas?.some(b => fl.faixas.has(b))) return false;
       if (cn) {
         const mun = e.municipio.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         if (!mun.includes(cn)) return false;
@@ -128,9 +125,6 @@ export default function CellFilters({ erbs, onFilter, filterOptions }: Props) {
                 placeholder="Buscar município..."
                 className="w-full h-8 px-3 rounded-md box-border border-solid text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] transition-colors duration-200 bg-[var(--input-bg)] border border-[var(--input-border)]" />
             </div>
-
-            <MultiSelect label="Faixa (MHz)" placeholder="Todas" options={filterOptions.faixas}
-              selected={f.faixas} onChange={faixas => upd({ faixas })} searchable={false} />
 
             <button onClick={reset} type="button"
               className="w-full h-8 rounded-md box-border border-solid text-[11px] font-medium text-[var(--accent)]

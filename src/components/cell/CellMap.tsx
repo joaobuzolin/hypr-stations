@@ -588,7 +588,7 @@ export default function CellMap() {
 
   const ckStations = useMemo(() =>
     allErbs.filter(e => cart.has(e.id)).map(e => ({
-      tipo: e.tech_principal, frequencia: e.faixas?.[0] || '', municipio: e.municipio, uf: e.uf,
+      tipo: e.tech_principal, frequencia: e.freq_mhz?.[0] ? `${e.freq_mhz[0]} MHz` : '', municipio: e.municipio, uf: e.uf,
       audience: estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0),
     })), [cart, allErbs]);
 

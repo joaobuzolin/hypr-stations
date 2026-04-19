@@ -15,7 +15,6 @@ export interface ERB {
   logradouro?: string | null;
   coord_source?: string;
   freq_mhz?: number[];
-  faixas?: string[];
   azimutes?: number[];
 }
 
@@ -136,7 +135,6 @@ export function getFilterOptions(erbs: ERB[]) {
   return {
     ufs: [...ufs].sort(),
     operadoras: [...operadoras].sort(),
-    faixas: [] as string[], // Not available in compact data
   };
 }
 
