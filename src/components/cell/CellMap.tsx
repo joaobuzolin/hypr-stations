@@ -392,7 +392,7 @@ export default function CellMap() {
       return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:0.03em;background:${tc}15;color:${tc};border:0.5px solid ${tc}25">${t}</span>`;
     }).join(' ');
 
-    const html = `<div style="font-family:Urbanist,system-ui,sans-serif">
+    const html = `<div style="font-family:Urbanist,system-ui,sans-serif;background:var(--bg-surface);color:var(--text-primary);border-radius:12px;overflow:hidden">
       <div style="padding:20px 22px 16px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
           <div style="width:8px;height:8px;border-radius:50%;background:${opColor};flex-shrink:0"></div>
@@ -598,7 +598,7 @@ export default function CellMap() {
     const z = map.getZoom();
     const showDrill = z < 8;
 
-    const html = `<div style="font-family:Urbanist,system-ui,sans-serif;min-width:280px">
+    const html = `<div style="font-family:Urbanist,system-ui,sans-serif;min-width:280px;background:var(--bg-surface);color:var(--text-primary);border-radius:12px;overflow:hidden">
       <div style="padding:16px 18px 12px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
