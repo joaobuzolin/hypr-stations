@@ -379,6 +379,16 @@ export function addDominanceLayer(map: MLMap, opts: DominanceOptions = {}) {
     },
   });
 
+  // Labels use the operator color (passed via properties.color). The halo
+  // needs to contrast with the label color itself — on dark mode that means
+  // a near-black halo, on light mode it means a white halo. Otherwise dark
+  // operator colors (Vivo's purple, Claro's red) blend into a dark halo in
+  // light mode and read as near-black. Slightly wider halo in light mode
+  // compensates for the lower contrast of colored text over pale map tiles.
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+  const haloColor = isLight ? '#ffffff' : '#0f1419';
+  const haloWidth = isLight ? 2 : 1.5;
+
   map.addLayer({
     id: DOM_LABEL, type: 'symbol', source: DOM_SOURCE,
     minzoom: 9,
@@ -386,7 +396,11 @@ export function addDominanceLayer(map: MLMap, opts: DominanceOptions = {}) {
       'text-field': ['get', 'label'],
       'text-size': 10, 'text-font': ['Noto Sans Regular'], 'text-allow-overlap': false,
     },
-    paint: { 'text-color': ['get', 'color'], 'text-halo-color': '#0f1419', 'text-halo-width': 1.5 },
+    paint: {
+      'text-color': ['get', 'color'],
+      'text-halo-color': haloColor,
+      'text-halo-width': haloWidth,
+    },
   });
 }
 
