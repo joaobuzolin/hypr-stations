@@ -124,7 +124,7 @@
     --hover-bg: rgba(255, 255, 255, 0.03);
     --control-border: rgba(255, 255, 255, 0.14);
     --shadow-dropdown: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --popup-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.06), 0 12px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.2);
+    --popup-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.2);
 
     /* Tech badge colors — used in DOM (list rows, popup, filters). Map layers use hex from constants.ts */
     --tech-5g-fg: #e85454;
@@ -168,7 +168,7 @@
     --hover-bg: rgba(0, 0, 0, 0.03);
     --control-border: rgba(0, 0, 0, 0.18);
     --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.10);
-    --popup-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+    --popup-shadow: 0 12px 32px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
 
     /* Tech badge colors — darker shades for WCAG AA contrast on light bg */
     --tech-5g-fg: #a32d2d;
@@ -261,19 +261,37 @@ button[style*="--op-hover"]:not([data-focused]):hover {
    with different backgrounds creating visible seams/rings around the
    popup — a bug that plagued the previous implementation. */
 .maplibregl-popup-content,
-.maplibregl-popup-content * {
+.maplibregl-popup-content *,
+.maplibregl-popup-content-wrapper {
   border-color: transparent !important;
 }
 
-.maplibregl-popup-content {
+/* Belt-and-suspenders: nuke any default background/border on every
+   MapLibre popup wrapper level. The inline HTML div is the sole
+   source of visual styling. Any lingering white ring in dark mode
+   was coming from one of these layers. */
+.maplibregl-popup,
+.maplibregl-popup-content,
+.maplibregl-popup-content-wrapper,
+.maplibregl-popup-anchor-top,
+.maplibregl-popup-anchor-top-left,
+.maplibregl-popup-anchor-top-right,
+.maplibregl-popup-anchor-bottom,
+.maplibregl-popup-anchor-bottom-left,
+.maplibregl-popup-anchor-bottom-right,
+.maplibregl-popup-anchor-left,
+.maplibregl-popup-anchor-right {
   background: transparent !important;
-  color: var(--text-primary) !important;
-  padding: 0 !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+.maplibregl-popup-content {
+  padding: 0 !important;
   border-radius: 0 !important;
   max-width: 340px !important;
   overflow: visible !important; /* let inner div's shadow escape */
+  color: var(--text-primary) !important;
 }
 
 /* Tip (arrow) hidden — cleaner look, shadow flows uninterrupted */
