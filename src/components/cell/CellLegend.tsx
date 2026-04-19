@@ -31,7 +31,7 @@ export default function CellLegend({ viewMode, opCounts, selectionBarHeight = 0 
     <div
       className="absolute right-3.5 z-10 rounded-[10px] overflow-hidden transition-[bottom] duration-200"
       style={{
-        bottom: selectionBarHeight > 0 ? selectionBarHeight + 14 : 14,
+        bottom: `calc(var(--bottom-safe, 0px) + ${selectionBarHeight > 0 ? selectionBarHeight + 14 : 14}px)`,
         background: 'var(--bg-surface)',
         border: '0.5px solid var(--border-hover)',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08)',

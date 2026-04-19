@@ -607,12 +607,38 @@ export default function CellMap() {
     <div className="flex flex-1 h-full min-h-0 overflow-hidden">
       {/* Sidebar */}
       <aside aria-label="Filtros e ERBs"
-        className="hidden md:flex w-[290px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
+        className="hidden md:flex w-[260px] lg:w-[290px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <div className="text-[12px] text-[var(--text-muted)]">Carregando ERBs...</div>
+          <div className="flex-1 flex flex-col gap-3 p-4" aria-busy="true" aria-label="Carregando filtros">
+            {/* Skeleton: filter section */}
+            <div className="skeleton h-3 w-20 mb-1" />
+            <div className="flex gap-1.5">
+              <div className="skeleton h-8 w-12" />
+              <div className="skeleton h-8 w-12" />
+              <div className="skeleton h-8 w-12" />
+              <div className="skeleton h-8 w-12" />
+            </div>
+            <div className="skeleton h-3 w-24 mt-4" />
+            <div className="flex flex-wrap gap-1.5">
+              <div className="skeleton h-7 w-14" />
+              <div className="skeleton h-7 w-16" />
+              <div className="skeleton h-7 w-12" />
+              <div className="skeleton h-7 w-14" />
+            </div>
+            <div className="skeleton h-3 w-16 mt-4" />
+            <div className="skeleton h-10 w-full" />
+            {/* Skeleton: list rows */}
+            <div className="flex flex-col gap-3 mt-6">
+              {[0, 1, 2, 3, 4].map(i => (
+                <div key={i} className="flex gap-3">
+                  <div className="skeleton w-5 h-5 shrink-0" />
+                  <div className="flex-1 flex flex-col gap-2">
+                    <div className="skeleton h-3 w-3/4" />
+                    <div className="skeleton h-2 w-1/2" />
+                    <div className="skeleton h-2 w-2/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ) : (<>
@@ -669,7 +695,7 @@ export default function CellMap() {
         {/* Coverage radius toggle */}
         {viewMode === 'pins' && !loading && (
           <button onClick={toggleCoverage} aria-label="Raios de cobertura" aria-pressed={showCoverage}
-            style={{ bottom: selectionBarHeight > 0 ? selectionBarHeight + 14 : 14 }}
+            style={{ bottom: `calc(var(--bottom-safe, 0px) + ${selectionBarHeight > 0 ? selectionBarHeight + 14 : 14}px)` }}
             className={`absolute left-3.5 z-10 flex items-center gap-2 px-4 py-2 rounded-[10px] border-[0.5px] text-[11px] font-medium cursor-pointer transition-all duration-200
               ${showCoverage
                 ? 'bg-[var(--accent-muted)] border-[var(--accent)] text-[var(--accent)]'

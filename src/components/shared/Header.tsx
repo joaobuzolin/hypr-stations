@@ -52,7 +52,7 @@ function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {
           return (
             <a key={item.href} href={item.href}
               className={`px-[18px] py-2 rounded-lg text-[12px] font-medium tracking-[0.01em]
-                transition-all duration-200 no-underline
+                transition-all duration-200 no-underline active:scale-[0.96]
                 ${isActive
                   ? 'text-[var(--accent)] bg-[var(--accent-muted)]'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-surface2)]'
@@ -71,18 +71,29 @@ function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {
 
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[1300] flex
-                      bg-[var(--bg-surface)] border-t border-[var(--border)]"
+                      bg-[var(--bg-surface)] border-t border-[var(--border)]
+                      pb-[env(safe-area-inset-bottom)]"
            aria-label="Navegação principal">
         {NAV_ITEMS.map((item) => {
           const isActive = currentPage === item.href || (item.href !== '/' && currentPage?.startsWith(item.href));
           return (
             <a key={item.href} href={item.href}
-              className={`flex-1 flex flex-col items-center gap-1 py-2.5 no-underline transition-colors duration-200
+              className={`flex-1 flex flex-col items-center gap-1 py-2.5 no-underline
+                transition-colors duration-200 active:scale-[0.96] transition-transform
                 ${isActive
                   ? 'text-[var(--accent)]'
                   : 'text-[var(--text-muted)]'
                 }`}>
-              {item.icon}
+              <span className={`relative flex items-center justify-center transition-transform duration-200 ${isActive ? 'scale-[1.08]' : 'scale-100'}`}>
+                {item.icon}
+                {isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--accent)]"
+                    style={{ animation: 'popIn 0.3s cubic-bezier(0.16,1,0.3,1) both' }}
+                  />
+                )}
+              </span>
               <span className="text-[10px] font-medium">{item.label}</span>
             </a>
           );

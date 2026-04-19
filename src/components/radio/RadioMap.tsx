@@ -161,9 +161,9 @@ export default function RadioMap() {
 
   return (<>
     <div className="flex flex-1 h-full min-h-0 overflow-hidden">
-      {/* Sidebar — 200px like original */}
+      {/* Sidebar — 260px on md, 290px on lg+ */}
       <aside aria-label="Filtros e estações"
-        className="hidden md:flex w-[290px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
+        className="hidden md:flex w-[260px] lg:w-[290px] flex-col bg-[var(--bg-surface)] border-r border-[var(--border)] shrink-0 overflow-hidden">
         <RadioFilters stations={allStations} onFilter={onFilter} allUFs={data?.allUFs ?? []} allClasses={data?.allClasses ?? []} allFinalidades={data?.allFinalidades ?? []} />
         <StationList stations={filtered} cart={cart} activeIdx={activeIdx} onFocus={focusStation}
           onToggleCart={toggleCart} onClearCart={clearCart} onSelectAll={selectAll} totalCount={filtered.length} />
@@ -171,9 +171,8 @@ export default function RadioMap() {
 
       <MapContainer onMapReady={onMapReady}>
         {/* Legend */}
-        {/* Legend */}
         <div
-          style={{ bottom: selectionBarHeight > 0 ? selectionBarHeight + 14 : 14 }}
+          style={{ bottom: `calc(var(--bottom-safe, 0px) + ${selectionBarHeight > 0 ? selectionBarHeight + 14 : 14}px)` }}
           className="absolute right-3.5 z-10 rounded-[10px] border-[0.5px] px-4 py-3 pointer-events-none overlay-panel transition-[bottom] duration-200">
           <div className="text-[11px] font-medium tracking-[0.03em] text-[var(--text-muted)] mb-2.5">Legenda</div>
           <div className="flex items-center gap-2 text-[12px] text-[var(--text-primary)] mb-1.5">
