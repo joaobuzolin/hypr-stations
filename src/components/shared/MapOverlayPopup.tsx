@@ -5,20 +5,20 @@ import { createPortal } from 'react-dom';
 /**
  * React-based map popup, positioned via map.project(). Deliberately does NOT
  * use maplibregl.Popup — that class injects DOM wrappers with their own
- * backgrounds/borders that fight the app's theme tokens. This component
- * renders pure app-themed markup to document.body (portal) and positions
- * itself with absolute coordinates synced to the map on every move frame.
+ * backgrounds/borders that fight the app's theme tokens.
  *
- * Close behavior: Escape only. Dismissal via clicking on empty map is the
- * CALLER's responsibility — the caller's map.on('click', ...) handlers for
- * layers (pins, hexes) fire BEFORE any generic map.on('click') we'd register
- * here, so a naive auto-close would kill the popup on the same click that
- * opened it. Instead, the caller adds its own generic click listener that
- * closes only when no layer handler matched.
+ * Positioning: map.project() returns coordinates in the MAP CONTAINER's
+ * local coordinate space (origin = top-left of the map canvas). We render
+ * the popup via portal to document.body with position:fixed, converting
+ * container-local coords to viewport coords by adding the container's
+ * bounding rect. This keeps the popup free to escape the map container's
+ * overflow:hidden — a pin near the top edge of the map won't have its
+ * popup clipped.
  *
- * First render: before we know the card's height, we position invisibly at
- * the anchor and flip to visible on the next frame with the correct offset.
- * Prevents the card from flashing below/beside the anchor on open.
+ * Close behavior: Escape only. Dismissal via clicking empty map is the
+ * caller's job — MapLibre dispatches layer-filtered click handlers before
+ * generic click, so a naive auto-close would kill the popup on the same
+ * click that opened it.
  */
 export interface MapOverlayPopupProps {
   map: MLMap | null;
@@ -43,8 +43,7 @@ export default function MapOverlayPopup({
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [cardHeight, setCardHeight] = useState<number | null>(null);
 
-  // Reset measured height whenever the popup opens for a new point, so the
-  // previous content's size doesn't misplace the new content on open.
+  // Reset measured height when the popup opens for a new point.
   useEffect(() => {
     if (lngLat) setCardHeight(null);
   }, [lngLat]);
@@ -61,12 +60,15 @@ export default function MapOverlayPopup({
   }, [children, pos]);
 
   // Sync screen position with the map on every frame.
+  // Convert container-local project() coords to viewport coords by
+  // adding the container's bounding rect offset.
   useEffect(() => {
     if (!map || !lngLat) { setPos(null); return; }
 
     const project = () => {
-      const p = map.project(lngLat);
-      setPos({ x: p.x, y: p.y });
+      const local = map.project(lngLat);
+      const rect = map.getContainer().getBoundingClientRect();
+      setPos({ x: local.x + rect.left, y: local.y + rect.top });
     };
     project();
 
@@ -74,11 +76,17 @@ export default function MapOverlayPopup({
     map.on('zoom', project);
     map.on('rotate', project);
     map.on('pitch', project);
+    // Also on window resize/scroll, the container's viewport offset
+    // can change even though its content doesn't move. Cheap to refresh.
+    window.addEventListener('resize', project);
+    window.addEventListener('scroll', project, true);
     return () => {
       map.off('move', project);
       map.off('zoom', project);
       map.off('rotate', project);
       map.off('pitch', project);
+      window.removeEventListener('resize', project);
+      window.removeEventListener('scroll', project, true);
     };
   }, [map, lngLat]);
 
@@ -90,7 +98,7 @@ export default function MapOverlayPopup({
     return () => window.removeEventListener('keydown', onKey);
   }, [closeOnEscape, onClose]);
 
-  if (!pos || !lngLat) return null;
+  if (!map || !pos || !lngLat) return null;
 
   const TIP_HEIGHT = 8;
   const cardLeft = pos.x;
