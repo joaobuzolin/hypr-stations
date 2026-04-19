@@ -6,6 +6,7 @@ import type { DominanceOptions, DominanceStatus } from './analysisLayers';
 interface Props {
   zoom: number;
   onOptionsChange: (opts: DominanceOptions) => void;
+  onAddVisibleToCart?: (opts: DominanceOptions, resKey: string) => Promise<number>;
 }
 
 const TECH_OPTS: { value: 'all' | '5G' | '4G'; label: string }[] = [
@@ -18,12 +19,14 @@ function isDark() {
   return !document.documentElement.classList.contains('light');
 }
 
-export default function DominancePanel({ zoom, onOptionsChange }: Props) {
+export default function DominancePanel({ zoom, onOptionsChange, onAddVisibleToCart }: Props) {
   const [techFilter, setTechFilter] = useState<'all' | '5G' | '4G'>('all');
   const [focusOp, setFocusOp] = useState<string | null>(null);
   const [rivalOp, setRivalOp] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<Set<DominanceStatus>>(new Set());
   const [rivalPickerOpen, setRivalPickerOpen] = useState(false);
+  const [addState, setAddState] = useState<'idle' | 'adding' | 'success'>('idle');
+  const [addedCount, setAddedCount] = useState(0);
   const rivalPickerRef = useRef<HTMLDivElement>(null);
 
   const dark = isDark();
@@ -92,6 +95,22 @@ export default function DominancePanel({ zoom, onOptionsChange }: Props) {
     setStatusFilter(n);
     emit({ statusFilter: Array.from(n) });
   }, [statusFilter, emit]);
+
+  const handleAddToCart = useCallback(async () => {
+    if (!onAddVisibleToCart || addState === 'adding') return;
+    setAddState('adding');
+    try {
+      const n = await onAddVisibleToCart(
+        { techFilter, focusOp, rivalOp, statusFilter: Array.from(statusFilter) },
+        resKey
+      );
+      setAddedCount(n);
+      setAddState('success');
+      setTimeout(() => setAddState('idle'), 2500);
+    } catch {
+      setAddState('idle');
+    }
+  }, [onAddVisibleToCart, addState, techFilter, focusOp, rivalOp, statusFilter, resKey]);
 
   if (!stats.byOperator.length) return null;
 
@@ -300,6 +319,47 @@ export default function DominancePanel({ zoom, onOptionsChange }: Props) {
             }} />
             <span className="text-[9px]" style={{ color: textFaint }}>{inPairMode ? 'Vence' : 'Domina'}</span>
           </div>
+
+          {/* Add visible regions to cart */}
+          {onAddVisibleToCart && (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={addState === 'adding'}
+              aria-label="Adicionar ERBs das regiões visíveis ao plano"
+              className="w-full mt-3 h-9 rounded-[8px] text-[12px] font-semibold
+                         cursor-pointer transition-all duration-200 border-0 outline-none
+                         focus-visible:ring-2 focus-visible:ring-[var(--accent)]
+                         flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+              style={{
+                background: addState === 'success' ? 'rgba(92,184,122,0.15)' : 'var(--accent)',
+                color: addState === 'success' ? '#5cb87a' : 'var(--on-accent)',
+                border: addState === 'success' ? '0.5px solid rgba(92,184,122,0.4)' : '0',
+              }}>
+              {addState === 'adding' && (
+                <>
+                  <div className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  Adicionando…
+                </>
+              )}
+              {addState === 'success' && (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  +{addedCount.toLocaleString('pt-BR')} ERBs no plano
+                </>
+              )}
+              {addState === 'idle' && (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Adicionar ao plano
+                </>
+              )}
+            </button>
+          )}
         </div>
       )}
 

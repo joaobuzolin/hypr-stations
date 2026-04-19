@@ -341,3 +341,68 @@ export function getDominanceHexes(techFilter: 'all' | '5G' | '4G' = 'all', resol
   if (!_domData) return [];
   return _domData[techFilter]?.[resolution] || [];
 }
+
+// Resolution mapping: 'r3' -> 3, 'r4' -> 4, 'r5' -> 5
+function resKeyToNumber(resKey: string): number {
+  const n = parseInt(resKey.slice(1), 10);
+  return isNaN(n) ? 4 : n;
+}
+
+// hex -> ERB[] mapping, cached per resolution. Built lazily on first use.
+// Iterating 109K ERBs with latLngToCell takes ~150-300ms on first call; cached after.
+import { latLngToCell } from 'h3-js';
+
+const _hexToErbsByRes: Record<number, Map<string, number[]>> = {};
+
+export function buildHexToErbsMap(erbs: ERB[], resolution: number): Map<string, number[]> {
+  if (_hexToErbsByRes[resolution]) return _hexToErbsByRes[resolution];
+
+  const m = new Map<string, number[]>();
+  for (const e of erbs) {
+    if (!e.lat || !e.lng) continue;
+    const h = latLngToCell(e.lat, e.lng, resolution);
+    const list = m.get(h);
+    if (list) list.push(e.id);
+    else m.set(h, [e.id]);
+  }
+  _hexToErbsByRes[resolution] = m;
+  return m;
+}
+
+// Collect ERB IDs from hexes that are currently visible given the dominance options.
+// Honors techFilter, focusOp, rivalOp, and statusFilter — exactly what the user sees.
+export function getErbIdsInVisibleHexes(erbs: ERB[], opts: DominanceOptions, resKey: string): number[] {
+  if (!_domData) return [];
+  const techKey = opts.techFilter || 'all';
+  const allHexes = _domData[techKey]?.[resKey] || [];
+  if (!allHexes.length) return [];
+
+  // Filter hexes by status (same logic as addDominanceLayer)
+  const statusFilter = opts.statusFilter?.length ? new Set(opts.statusFilter) : null;
+  const visibleHexes = (opts.focusOp && statusFilter)
+    ? allHexes.filter(h => statusFilter.has(computeHexStatus(h, opts.focusOp!, opts.rivalOp)))
+    : allHexes;
+
+  const resolution = resKeyToNumber(resKey);
+  const hexMap = buildHexToErbsMap(erbs, resolution);
+
+  const ids = new Set<number>();
+  for (const h of visibleHexes) {
+    const list = hexMap.get(h.h);
+    if (list) for (const id of list) ids.add(id);
+  }
+
+  // Apply tech filter at ERB level (hex already coarse-filtered, but a single
+  // ERB might have multiple techs — user expects cart to only include matching techs)
+  if (opts.techFilter && opts.techFilter !== 'all') {
+    const erbById = new Map(erbs.map(e => [e.id, e]));
+    const filtered: number[] = [];
+    for (const id of ids) {
+      const e = erbById.get(id);
+      if (e && e.tecnologias.includes(opts.techFilter)) filtered.push(id);
+    }
+    return filtered;
+  }
+
+  return Array.from(ids);
+}

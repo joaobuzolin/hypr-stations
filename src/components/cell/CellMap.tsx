@@ -14,7 +14,7 @@ import CellLegend from './CellLegend';
 import { fetchERBs, getFilterOptions, type ERB } from './cellData';
 import { OPERADORA_COLORS, TECH_COLORS } from '../../lib/constants';
 import { formatAudience, estimateCellAudience, estimateCellRadius } from '../../lib/audience';
-import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, type DominanceOptions } from './analysisLayers';
+import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, getErbIdsInVisibleHexes, type DominanceOptions } from './analysisLayers';
 import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
 import { downloadCSV } from '../../lib/csv';
 
@@ -208,6 +208,25 @@ export default function CellMap() {
       forceRedrawDominance(map, opts);
     }
   }, []);
+
+  // Collect ERB IDs from dominance hexes currently visible (honors all filters)
+  // and merge them into the cart. Returns count of newly added IDs.
+  const handleAddVisibleToCart = useCallback(async (opts: DominanceOptions, resKey: string): Promise<number> => {
+    if (!allErbs.length) return 0;
+    // Yield to the browser so the button can show its loading state before the
+    // h3 mapping (first call = ~200ms) blocks the main thread.
+    await new Promise(r => setTimeout(r, 0));
+    const ids = getErbIdsInVisibleHexes(allErbs, opts, resKey);
+    let addedCount = 0;
+    setCart(prev => {
+      const n = new Set(prev);
+      for (const id of ids) {
+        if (!n.has(id)) { n.add(id); addedCount++; }
+      }
+      return n;
+    });
+    return addedCount;
+  }, [allErbs]);
 
   const toggleCoverage = useCallback(() => {
     const next = !coverageRef.current;
@@ -459,7 +478,7 @@ export default function CellMap() {
 
         {/* Dominance stats panel */}
         {viewMode === 'dominance' && !loading && (
-          <DominancePanel zoom={mapZoom} onOptionsChange={handleDomOptsChange} />
+          <DominancePanel zoom={mapZoom} onOptionsChange={handleDomOptsChange} onAddVisibleToCart={handleAddVisibleToCart} />
         )}
 
         {/* Legend — hidden in dominance mode (panel has the info) */}
