@@ -11,7 +11,7 @@ import MapOverlayPopup from '../shared/MapOverlayPopup';
 import RadioPinPopupContent from './RadioPinPopupContent';
 import { loadRadioData, type RadioStation, type RadioData } from './radioData';
 import { RADIO_COLORS } from '../../lib/constants';
-import { formatAudience } from '../../lib/audience';
+import { formatAudience, estimateRadioAudience } from '../../lib/audience';
 import { downloadCSV } from '../../lib/csv';
 
 const RADIO_CSV_HEADERS = ['tipo','municipio','uf','frequencia','classe','categoria','erp','entidade','carater','finalidade','lat','lng'];
