@@ -287,18 +287,26 @@ export function addDominanceLayer(map: MLMap, opts: DominanceOptions = {}) {
       if (status === 'wins') {
         color = '#5cb87a'; // green
         const strength = h.t > 0 ? (h.o[focusOp] || 0) / h.t : 0;
-        opacity = Math.min(0.2 + strength * 0.5, 0.65);
+        // Was 0.2 + strength*0.5, cap 0.65 — too washed out for wins.
+        // Strong wins now paint at 0.85, weakest at ~0.40.
+        opacity = Math.min(0.4 + strength * 0.5, 0.85);
       } else if (status === 'contested') {
         color = '#e88a4a'; // amber
         const strength = h.t > 0 ? (h.o[focusOp] || 0) / h.t : 0;
-        opacity = Math.min(0.12 + strength * 0.3, 0.4);
+        // Was 0.12 + strength*0.3, cap 0.4 — barely visible. Bumped to 0.25-0.6.
+        opacity = Math.min(0.25 + strength * 0.4, 0.6);
       } else {
         color = '#e85454'; // red
-        opacity = 0.22;
+        // Absent was 0.22 — now 0.35 so the operator's gaps read clearly.
+        opacity = 0.35;
       }
     } else {
       color = OPERADORA_COLORS[h.d] || OPERADORA_COLORS['Outras'];
-      opacity = h.p >= 90 ? 0.55 : h.p >= 70 ? 0.35 : h.p >= 50 ? 0.2 : 0.12;
+      // Was 0.12/0.20/0.35/0.55 — hex colors read as washed at the low end,
+      // especially for low-concentration pixels in contested regions.
+      // New curve doubles the floor and lifts the whole scale ~25-50%, keeping
+      // the same ordinal relationship between concentration tiers.
+      opacity = h.p >= 90 ? 0.75 : h.p >= 70 ? 0.55 : h.p >= 50 ? 0.4 : 0.28;
     }
 
     // Dynamic label based on current mode:
@@ -337,13 +345,16 @@ export function addDominanceLayer(map: MLMap, opts: DominanceOptions = {}) {
     id: DOM_FILL, type: 'fill', source: DOM_SOURCE,
     paint: {
       'fill-color': ['get', 'color'],
-      // Boost opacity on hover/active via feature-state
+      // Boost opacity on hover/active via feature-state. Caps tuned for the
+      // new higher base opacity — multipliers are smaller (1.2/1.15) because
+      // starting points are already 2× what they were; keeping the old 1.3/1.6
+      // would just saturate to the cap immediately and kill the boost signal.
       'fill-opacity': [
         'case',
         ['boolean', ['feature-state', 'active'], false],
-          ['min', ['*', ['get', 'opacity'], 1.6], 0.85],
+          ['min', ['*', ['get', 'opacity'], 1.25], 0.95],
         ['boolean', ['feature-state', 'hovered'], false],
-          ['min', ['*', ['get', 'opacity'], 1.3], 0.75],
+          ['min', ['*', ['get', 'opacity'], 1.15], 0.88],
         ['get', 'opacity'],
       ],
     },
@@ -355,15 +366,15 @@ export function addDominanceLayer(map: MLMap, opts: DominanceOptions = {}) {
       'line-color': ['get', 'color'],
       'line-width': [
         'case',
-        ['boolean', ['feature-state', 'active'], false], 2,
-        ['boolean', ['feature-state', 'hovered'], false], 1.5,
-        0.5,
+        ['boolean', ['feature-state', 'active'], false], 2.2,
+        ['boolean', ['feature-state', 'hovered'], false], 1.6,
+        0.7,
       ],
       'line-opacity': [
         'case',
-        ['boolean', ['feature-state', 'active'], false], 0.95,
-        ['boolean', ['feature-state', 'hovered'], false], 0.6,
-        0.25,
+        ['boolean', ['feature-state', 'active'], false], 1,
+        ['boolean', ['feature-state', 'hovered'], false], 0.75,
+        0.4,
       ],
     },
   });
