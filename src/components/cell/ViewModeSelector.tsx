@@ -74,7 +74,7 @@ export default function ViewModeSelector({ mode, onChange }: Props) {
 
   return (
     <div
-      className="absolute top-3.5 left-1/2 -translate-x-1/2 z-10 flex p-1 rounded-full relative"
+      className="absolute top-3.5 left-1/2 -translate-x-1/2 z-10 flex p-1 rounded-full"
       role="radiogroup"
       aria-label="Modo de visualização"
       style={{
