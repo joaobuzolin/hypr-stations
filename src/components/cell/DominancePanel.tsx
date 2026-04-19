@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { OPERADORA_COLORS } from '../../lib/constants';
-import { getDominanceStats, getOperatorFocusStats, getDominanceHexes, computeHexStatus } from './analysisLayers';
+import { getDominanceStats, getOperatorFocusStats, getDominanceHexes, computeHexStatus, getResKeyForZoom } from './analysisLayers';
 import type { DominanceOptions, DominanceStatus } from './analysisLayers';
 
 interface Props {
@@ -46,7 +46,7 @@ export default function DominancePanel({ zoom, onOptionsChange, onAddVisibleToCa
     localStorage.setItem(LS_KEY, open ? '1' : '0');
   }, [open]);
 
-  const resKey = zoom < 6 ? 'r3' : zoom < 8 ? 'r4' : 'r5';
+  const resKey = getResKeyForZoom(zoom);
   const stats = useMemo(() => getDominanceStats(techFilter, resKey), [techFilter, resKey]);
   const focusStats = useMemo(() => focusOp ? getOperatorFocusStats(focusOp, techFilter, resKey) : null, [focusOp, techFilter, resKey]);
   const pairCounts = useMemo(

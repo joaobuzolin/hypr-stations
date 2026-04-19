@@ -1,4 +1,5 @@
 import type { Map as MLMap } from 'maplibre-gl';
+import { cellToBoundary, cellToLatLng, latLngToCell } from 'h3-js';
 import { OPERADORA_COLORS } from '../../lib/constants';
 import type { ERB } from './cellData';
 
@@ -50,8 +51,6 @@ const DOM_SOURCE = 'erb-dominance';
 const DOM_FILL = 'erb-dominance-fill';
 const DOM_LINE = 'erb-dominance-line';
 const DOM_LABEL = 'erb-dominance-label';
-
-import { cellToBoundary } from 'h3-js';
 
 export interface HexRaw {
   h: string;           // h3 index
@@ -108,6 +107,77 @@ function expandHexes(compact: CompactHex[], ops: string[]): HexRaw[] {
 let _domData: DominanceData | null = null;
 let _domLoading: Promise<DominanceData | null> | null = null;
 
+// ERBs injected by CellMap — needed for runtime hex computation at r6/r7
+let _erbsForDominance: ERB[] | null = null;
+
+// Runtime hex cache keyed by `${techFilter}-r${resolution}`. Cleared when
+// ERBs change (i.e. only after full reload of erb.json).
+const _runtimeHexes: Map<string, HexRaw[]> = new Map();
+
+export function setErbsForDominance(erbs: ERB[]): void {
+  _erbsForDominance = erbs;
+  _runtimeHexes.clear();
+}
+
+// Unified resolution picker. Lower number = bigger hex; higher = finer detail.
+// Approx hex edge length: r3=25km, r4=10km, r5=4km, r6=1.5km, r7=600m
+export function getResolutionForZoom(zoom: number): number {
+  if (zoom < 6) return 3;
+  if (zoom < 8) return 4;
+  if (zoom < 10) return 5;
+  if (zoom < 12) return 6;
+  return 7;
+}
+
+export function getResKeyForZoom(zoom: number): string {
+  return `r${getResolutionForZoom(zoom)}`;
+}
+
+// Compute hexagons at an arbitrary resolution from raw ERB data.
+// Used when resolution > 5 (not pre-computed in dominance.json).
+function computeRuntimeHexes(techFilter: 'all' | '5G' | '4G', resolution: number): HexRaw[] {
+  const cacheKey = `${techFilter}-r${resolution}`;
+  const cached = _runtimeHexes.get(cacheKey);
+  if (cached) return cached;
+  if (!_erbsForDominance) return [];
+
+  const erbs = techFilter === 'all'
+    ? _erbsForDominance
+    : _erbsForDominance.filter(e => e.tecnologias?.includes(techFilter));
+
+  const hexMap = new Map<string, Record<string, number>>();
+  for (const e of erbs) {
+    if (!e.lat || !e.lng) continue;
+    const h = latLngToCell(e.lat, e.lng, resolution);
+    let counts = hexMap.get(h);
+    if (!counts) { counts = {}; hexMap.set(h, counts); }
+    counts[e.prestadora_norm] = (counts[e.prestadora_norm] || 0) + 1;
+  }
+
+  const hexes: HexRaw[] = [];
+  for (const [h3Id, o] of hexMap.entries()) {
+    let dominantOp = '', dominantCount = 0, total = 0;
+    for (const [op, n] of Object.entries(o)) {
+      total += n;
+      if (n > dominantCount) { dominantCount = n; dominantOp = op; }
+    }
+    const pct = total > 0 ? Math.round((dominantCount / total) * 100) : 0;
+    hexes.push({ h: h3Id, c: h3ToRing(h3Id), d: dominantOp, p: pct, t: total, o });
+  }
+
+  _runtimeHexes.set(cacheKey, hexes);
+  return hexes;
+}
+
+// Main accessor — hybrid pre-computed (r3-r5) + runtime (r6+)
+export function getHexesForZoom(zoom: number, techFilter: 'all' | '5G' | '4G' = 'all'): HexRaw[] {
+  const res = getResolutionForZoom(zoom);
+  if (res <= 5 && _domData) {
+    return _domData[techFilter]?.[`r${res}`] || [];
+  }
+  return computeRuntimeHexes(techFilter, res);
+}
+
 export async function loadDominanceData(): Promise<DominanceData | null> {
   if (_domData) return _domData;
   if (_domLoading) return _domLoading;
@@ -134,9 +204,7 @@ export async function loadDominanceData(): Promise<DominanceData | null> {
 }
 
 function getResKey(zoom: number): string {
-  if (zoom < 6) return 'r3';
-  if (zoom < 8) return 'r4';
-  return 'r5';
+  return getResKeyForZoom(zoom);
 }
 
 export interface DominanceOptions {
@@ -170,12 +238,10 @@ export function computeHexStatus(h: HexRaw, focusOp: string, rivalOp?: string | 
 
 export function addDominanceLayer(map: MLMap, opts: DominanceOptions = {}) {
   removeDominanceLayer(map);
-  if (!_domData) return;
 
   const zoom = map.getZoom();
-  const resKey = getResKey(zoom);
   const techKey = opts.techFilter || 'all';
-  const hexes = _domData[techKey]?.[resKey];
+  const hexes = getHexesForZoom(zoom, techKey);
   if (!hexes?.length) return;
 
   const focusOp = opts.focusOp;
@@ -329,9 +395,9 @@ export interface DominanceStats {
 }
 
 export function getDominanceStats(techFilter: 'all' | '5G' | '4G' = 'all', resolution = 'r4'): DominanceStats {
-  if (!_domData) return { byOperator: [], totalErbs: 0, totalHexes: 0 };
+  const hexes = getDominanceHexes(techFilter, resolution);
+  if (!hexes.length) return { byOperator: [], totalErbs: 0, totalHexes: 0 };
 
-  const hexes = _domData[techFilter]?.[resolution] || [];
   const opStats: Record<string, { count: number; hexesWon: number }> = {};
   let totalErbs = 0;
 
@@ -355,8 +421,8 @@ export function getDominanceStats(techFilter: 'all' | '5G' | '4G' = 'all', resol
 }
 
 export function getOperatorFocusStats(op: string, techFilter: 'all' | '5G' | '4G' = 'all', resolution = 'r4') {
-  if (!_domData) return null;
-  const hexes = _domData[techFilter]?.[resolution] || [];
+  const hexes = getDominanceHexes(techFilter, resolution);
+  if (!hexes.length) return null;
   let wins = 0, contested = 0, absent = 0;
   let topRival = '', topRivalGap = 0;
 
@@ -378,9 +444,14 @@ export function getOperatorFocusStats(op: string, techFilter: 'all' | '5G' | '4G
 
 // Raw hex accessor — used by DominancePanel for pair-mode counting to stay
 // consistent with the layer's own classification logic.
+// Hybrid: pre-computed for r3-r5, runtime-computed for r6+.
 export function getDominanceHexes(techFilter: 'all' | '5G' | '4G' = 'all', resolution = 'r4'): HexRaw[] {
-  if (!_domData) return [];
-  return _domData[techFilter]?.[resolution] || [];
+  const res = resKeyToNumber(resolution);
+  if (res <= 5) {
+    if (!_domData) return [];
+    return _domData[techFilter]?.[resolution] || [];
+  }
+  return computeRuntimeHexes(techFilter, res);
 }
 
 // Resolution mapping: 'r3' -> 3, 'r4' -> 4, 'r5' -> 5
@@ -391,8 +462,6 @@ function resKeyToNumber(resKey: string): number {
 
 // hex -> ERB[] mapping, cached per resolution. Built lazily on first use.
 // Iterating 109K ERBs with latLngToCell takes ~150-300ms on first call; cached after.
-import { latLngToCell, cellToLatLng } from 'h3-js';
-
 const _hexToErbsByRes: Record<number, Map<string, number[]>> = {};
 
 // [lng, lat] center of a given H3 cell — GeoJSON-compatible order
@@ -425,9 +494,8 @@ export function getErbIdsInVisibleHexes(
   resKey: string,
   operatorFilter?: string[]
 ): number[] {
-  if (!_domData) return [];
   const techKey = opts.techFilter || 'all';
-  const allHexes = _domData[techKey]?.[resKey] || [];
+  const allHexes = getDominanceHexes(techKey, resKey);
   if (!allHexes.length) return [];
 
   // Filter hexes by status (same logic as addDominanceLayer)

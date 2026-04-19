@@ -14,7 +14,7 @@ import CellLegend from './CellLegend';
 import { fetchERBs, getFilterOptions, type ERB } from './cellData';
 import { OPERADORA_COLORS, TECH_COLORS } from '../../lib/constants';
 import { formatAudience, estimateCellAudience, estimateCellRadius } from '../../lib/audience';
-import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, getErbIdsInVisibleHexes, buildHexToErbsMap, getHexCenter, type DominanceOptions } from './analysisLayers';
+import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, setErbsForDominance, getErbIdsInVisibleHexes, buildHexToErbsMap, getHexCenter, getResolutionForZoom, type DominanceOptions } from './analysisLayers';
 import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
 import { downloadCSV } from '../../lib/csv';
 
@@ -67,6 +67,9 @@ export default function CellMap() {
     ]).then(([data]) => {
       setAllErbs(data);
       setFiltered(data);
+      // Inject ERB reference so analysisLayers can compute hex grids at r6/r7
+      // on demand (pre-computed dominance.json only covers r3-r5).
+      setErbsForDominance(data);
       setLoading(false);
     }).catch(err => {
       console.error('Failed to load data:', err);
@@ -482,7 +485,7 @@ export default function CellMap() {
     if (!allErbs.length) return 0;
     const opts = domOptsRef.current;
     const map = mapRef.current;
-    const resolution = !map ? 4 : map.getZoom() < 6 ? 3 : map.getZoom() < 8 ? 4 : 5;
+    const resolution = map ? getResolutionForZoom(map.getZoom()) : 4;
     const hexMap = buildHexToErbsMap(allErbs, resolution);
     const erbIds = hexMap.get(h3Id) || [];
     if (!erbIds.length) return 0;
