@@ -34,14 +34,14 @@ function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {
     >
       {/* Logo */}
       <a href="/" className="flex items-center gap-[11px] no-underline shrink-0">
-        <div className="w-8 h-8 rounded-[9px] bg-[var(--accent)] flex items-center justify-center">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[var(--on-accent)]">
+        <div className="w-9 h-9 rounded-[9px] bg-[var(--accent)] flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[var(--on-accent)]">
             <path d="M4 6h4v12H4V6zm6 4h4v8h-4v-8zm6-2h4v10h-4V8z" fill="currentColor" />
           </svg>
         </div>
-        <div className="hidden sm:flex items-baseline gap-0.5">
-          <span className="font-heading text-[14px] font-bold tracking-[0.01em] text-[var(--text-primary)]">HYPR</span>
-          <span className="font-heading text-[14px] font-bold tracking-[0.01em] text-[var(--accent)]">Station</span>
+        <div className="hidden sm:flex items-baseline gap-1">
+          <span className="font-heading text-[18px] font-bold tracking-[0.01em] text-[var(--text-primary)]">HYPR</span>
+          <span className="font-heading text-[18px] font-bold tracking-[0.01em] text-[var(--accent)]">Station</span>
         </div>
       </a>
 
