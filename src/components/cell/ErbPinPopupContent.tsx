@@ -1,5 +1,5 @@
 import { type ERB } from './cellData';
-import { estimateCellRadius, estimateCellAudience, formatAudience } from '../../lib/audience';
+import { estimateCellMetrics, formatAudience, densityLabel } from '../../lib/audience';
 import { OPERADORA_COLORS, TECH_COLORS } from '../../lib/constants';
 
 interface Props {
@@ -10,11 +10,16 @@ interface Props {
 
 export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props) {
   const opColor = OPERADORA_COLORS[erb.prestadora_norm] || '#7a6e64';
-  const radius = estimateCellRadius(erb.tech_principal, erb.freq_mhz?.[0] ?? 0);
-  const aud = estimateCellAudience(erb.tech_principal, erb.uf, erb.freq_mhz?.[0] ?? 0, {
-    mun: erb.municipio,
-    operatorName: erb.prestadora_norm,
-  });
+  // Single call resolves density → effective radius → audience in one pass.
+  // No operator share: audience is the raw population in the signal footprint,
+  // since the driver the user cares about is geographic reach × density.
+  const { radius, audience, density } = estimateCellMetrics(
+    erb.tech_principal, erb.uf, erb.freq_mhz?.[0] ?? 0,
+    { mun: erb.municipio }
+  );
+  const densityText = density >= 100
+    ? `${Math.round(density).toLocaleString('pt-BR')}/km²`
+    : `${density.toFixed(1)}/km²`;
 
   return (
     <div style={{ minWidth: 280 }}>
@@ -49,10 +54,21 @@ export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props)
 
       <div style={{ height: '0.5px', background: 'var(--border)', margin: '0 22px' }} />
 
-      <div style={{ display: 'flex', padding: '14px 22px', gap: 24 }}>
+      <div style={{ display: 'flex', padding: '14px 22px', gap: 20, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 4 }}>Alcance</div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>~{Math.round(radius)} km</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+            ~{radius < 1 ? radius.toFixed(1) : Math.round(radius)} km
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 4 }}>Densidade</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+            {densityText}
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, marginLeft: 5 }}>
+              · {densityLabel(density)}
+            </span>
+          </div>
         </div>
         <div>
           <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 4 }}>Coordenadas</div>
@@ -62,7 +78,7 @@ export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props)
         </div>
       </div>
 
-      {aud > 0 && (
+      {audience > 0 && (
         <div style={{
           margin: '0 14px 14px', padding: '14px 16px',
           background: 'var(--accent-muted)', border: '0.5px solid var(--border)',
@@ -72,13 +88,13 @@ export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props)
             Audiência potencial
           </div>
           <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--accent)', letterSpacing: '-0.01em' }}>
-            {formatAudience(aud)} devices
+            {formatAudience(audience)} devices
           </div>
         </div>
       )}
 
       <div style={{ fontSize: 10, color: 'var(--text-faint)', textAlign: 'center', padding: '0 22px 4px', opacity: 0.6 }}>
-        Anatel Fev/2026 · Modelo HYPR
+        Anatel Fev/2026 · IBGE 2024 · Modelo HYPR
       </div>
 
       <div style={{ padding: '0 14px 14px' }}>

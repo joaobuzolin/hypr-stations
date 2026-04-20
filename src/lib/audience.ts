@@ -74,20 +74,6 @@ export function estimateCellRadius(tech: string, freqMhz?: number): number {
   return techMap.default;
 }
 
-// Market share by operator (Anatel SMP 2024 Q4, approximate national average).
-// Source: Anatel Painel de Dados do SMP. Used when no local share is passed
-// in the context. Values sum to ~100% across all listed operators.
-const OPERATOR_SHARE: Record<string, number> = {
-  Vivo: 0.384,
-  Claro: 0.330,
-  TIM: 0.236,
-  Algar: 0.008,
-  Brisanet: 0.015,
-  Sercomtel: 0.002,
-  Unifique: 0.005,
-  Outras: 0.020,
-};
-
 // Brazil's active mobile lines per habitant. Anatel reports ~240M active
 // lines against an IBGE population of ~213M — ratio stays stable around
 // 1.10-1.12. We use 1.05 to be conservative (some lines are M2M/dormant).
@@ -98,54 +84,86 @@ export interface CellAudienceContext {
    *  look up the IBGE 2022 population density for that specific municipio,
    *  which is far more accurate than the UF average. */
   mun?: string;
-  /** Normalized operator name (e.g. "Vivo", "Claro", "TIM"). When provided,
-   *  the result is scaled by that operator's national market share — so the
-   *  return value represents devices that specific operator likely serves,
-   *  not the total devices in the area. */
-  operatorName?: string;
-  /** Local market share override, computed from the hex dominance data when
-   *  available. If passed, takes precedence over OPERATOR_SHARE national. */
-  localShare?: number;
 }
 
 /**
- * Effective coverage radius — clamps the theoretical max (from CELL_RADIUS)
- * based on local population density to account for cell-sharing and
- * realistic service areas. A 4G 700MHz antenna CAN technically reach 15km
- * in open terrain, and 2G 850MHz up to 35km, but:
- *  - in urban areas, handoff between neighboring ERBs every 500m means
- *    each antenna's effective service area is much smaller
- *  - in rural areas, the theoretical max matters, but only where density
- *    is genuinely low enough that no other ERBs are sharing the ring
+ * Per-tech effective-radius caps by population-density tier. Rationale:
+ *  - Urban density triggers cell-sharing: a 4G 700MHz antenna that could
+ *    technically reach 15km in open terrain only serves a small fraction
+ *    of that because neighboring ERBs handle the same ring.
+ *  - Different techs age differently. 2G/3G were deployed in the era of
+ *    large cells for wide coverage; 5G deployments assume dense small-cell
+ *    architecture. The caps preserve the inherent ordering 5G < 4G < 3G < 2G
+ *    even under heavy urban cell-sharing, so a 2G antenna in a capital still
+ *    reads as "bigger reach" than a 5G antenna in the same area.
+ *  - In genuinely rural zones (<50 hab/km²), there's no cell-sharing to
+ *    bound the coverage — the theoretical max applies.
  *
- * Returns the smaller of: theoretical radius, or density-adjusted cap.
+ * Caps in km. Lookup: RADIUS_CAPS[tier][tech] → cap in km, or undefined if
+ * the tier has no cap (rural).
  */
-function effectiveRadius(theoreticalKm: number, density: number): number {
-  if (density >= 3000) return Math.min(theoreticalKm, 0.6);   // urbano denso (capital)
-  if (density >= 1000) return Math.min(theoreticalKm, 1.2);   // urbano
-  if (density >= 200)  return Math.min(theoreticalKm, 3);     // urbano médio
-  if (density >= 50)   return Math.min(theoreticalKm, 5);     // interior/cidade média
-  if (density >= 10)   return Math.min(theoreticalKm, 10);    // rural médio
-  return theoreticalKm;                                        // deserto absoluto
+const RADIUS_CAPS: Array<{ minDensity: number; caps: Record<string, number> }> = [
+  // Metrópoles (SP capital, Fortaleza, BH, Recife, Rio, Salvador core)
+  { minDensity: 3000, caps: { '5G': 1.5, '4G': 2.5, '3G': 3.5, '2G': 4.0 } },
+  // Capitais menores / zonas urbanas densas (POA, Curitiba, Goiânia)
+  { minDensity: 1000, caps: { '5G': 2.0, '4G': 4.0, '3G': 6.0, '2G': 8.0 } },
+  // Urbano médio / suburbano (Niterói, Campinas, Santos, Brasília Plano Piloto)
+  { minDensity: 200,  caps: { '5G': 3.0, '4G': 7.0, '3G': 10.0, '2G': 15.0 } },
+  // Interior / cidades médias (Cuiabá, Uberlândia, interior de SP não-capital)
+  { minDensity: 50,   caps: { '5G': 5.0, '4G': 10.0, '3G': 15.0, '2G': 25.0 } },
+  // Rural médio e deserto absoluto: sem cap, raio teórico aplica.
+];
+
+/**
+ * Effective coverage radius — clamps the theoretical max from CELL_RADIUS
+ * based on (density_tier, tech). Returns theoreticalKm unchanged when the
+ * density is rural enough that the theoretical reach genuinely applies.
+ */
+export function effectiveRadius(tech: string, theoreticalKm: number, density: number): number {
+  for (const tier of RADIUS_CAPS) {
+    if (density >= tier.minDensity) {
+      const cap = tier.caps[tech];
+      if (cap == null) return theoreticalKm;
+      return Math.min(theoreticalKm, cap);
+    }
+  }
+  return theoreticalKm;
 }
 
 /**
- * Estimate the number of active mobile devices an ERB likely serves within
- * its effective coverage area (not theoretical max — see effectiveRadius).
- *
- * Precision hierarchy for population density:
- *   1. Municipal (IBGE 2022, from mun-density.json) — requires context.mun
- *      and preloadMunDensity() to have resolved
- *   2. State average (UF_DENSITY) — fallback when municipal lookup misses
- *   3. Fixed floor (30) — last resort when neither is available
+ * Resolve density for a given (mun, uf) with graceful fallback chain:
+ *   1. Municipal IBGE 2022 (requires preloadMunDensity() resolved)
+ *   2. UF-level average (Censo 2022)
+ *   3. Fixed floor of 30 hab/km²
+ */
+function resolveDensity(uf: string, mun?: string): number {
+  let d: number | null = null;
+  if (mun && uf) d = getMunDensity(mun, uf);
+  if (d == null) d = UF_DENSITY[uf] ?? null;
+  if (d == null) d = 30;
+  return d;
+}
+
+/**
+ * Estimate the population/devices within an ERB's effective coverage area.
  *
  * Formula:
- *   devices = π × r_effective² × density × mobilePenetration × operatorShare
+ *   audience = π × r_effective² × density × MOBILE_PENETRATION
  *
- * Example: ERB Vivo 5G 2100MHz in São Paulo capital
- *   r_theoretical = 1.0 km → clamped to 0.6km (density 7820 is urbano denso)
- *   area = π × 0.36 ≈ 1.13 km²
- *   devices = 1.13 × 7820 × 1.05 × 0.384 ≈ 3,565
+ * Represents *all people in the coverage area with active mobile lines*,
+ * not just devices of a specific operator. The driver is raw geographic
+ * reach × local population density — two antennas of the same tech in the
+ * same city return the same audience estimate, because the number reflects
+ * "how many people this antenna's signal footprint touches", not "how many
+ * of that operator's subscribers are under the antenna".
+ *
+ * Examples:
+ *   5G 2100MHz em Recife (density 7255, r cap 1.5km):
+ *     π × 1.5² × 7255 × 1.05 ≈ 53,832
+ *   4G 1800MHz em Recife (density 7255, r cap 2.5km):
+ *     π × 2.5² × 7255 × 1.05 ≈ 149,553
+ *   4G 1800MHz em Passagem-PB (density 20, rural, r teórico 5km):
+ *     π × 5² × 20 × 1.05 ≈ 1,648
  */
 export function estimateCellAudience(
   tech: string,
@@ -153,28 +171,46 @@ export function estimateCellAudience(
   freqMhz?: number,
   context?: CellAudienceContext
 ): number {
-  // Resolve density with graceful fallback chain.
-  let density: number | null = null;
-  if (context?.mun && uf) {
-    density = getMunDensity(context.mun, uf);
-  }
-  if (density == null) density = UF_DENSITY[uf] ?? null;
-  if (density == null) density = 30; // absolute floor
-
-  // Theoretical radius from tech+freq, clamped by urban cell-sharing reality.
+  const density = resolveDensity(uf, context?.mun);
   const rTheoretical = estimateCellRadius(tech, freqMhz);
-  const rKm = effectiveRadius(rTheoretical, density);
+  const rKm = effectiveRadius(tech, rTheoretical, density);
   const area = Math.PI * rKm * rKm;
-
-  // Operator share: local if provided (e.g. from hex dominance), else national.
-  const share = context?.localShare ??
-    (context?.operatorName
-      ? (OPERATOR_SHARE[context.operatorName] ?? 0.33)
-      : 1);
-
-  return Math.round(area * density * MOBILE_PENETRATION * share);
+  return Math.round(area * density * MOBILE_PENETRATION);
 }
 
+/**
+ * Single-call helper returning everything the popup needs: effective
+ * radius, audience estimate, and the density that drove the numbers.
+ * Exposing `density` lets the UI add interpretive context like
+ * "7.255 hab/km² (capital)" next to the raw audience number.
+ */
+export function estimateCellMetrics(
+  tech: string,
+  uf: string,
+  freqMhz?: number,
+  context?: CellAudienceContext
+): { radius: number; audience: number; density: number; radiusTheoretical: number } {
+  const density = resolveDensity(uf, context?.mun);
+  const rTheoretical = estimateCellRadius(tech, freqMhz);
+  const rKm = effectiveRadius(tech, rTheoretical, density);
+  const area = Math.PI * rKm * rKm;
+  const audience = Math.round(area * density * MOBILE_PENETRATION);
+  return { radius: rKm, audience, density, radiusTheoretical: rTheoretical };
+}
+
+/**
+ * Human-readable density label for the popup. Bucketing matches the
+ * RADIUS_CAPS tiers so "metrópole" in the UI means "capped at metropolis
+ * rates in the model" — keeps story/math in lock-step.
+ */
+export function densityLabel(density: number): string {
+  if (density >= 3000) return 'metrópole';
+  if (density >= 1000) return 'capital';
+  if (density >= 200)  return 'urbano';
+  if (density >= 50)   return 'interior';
+  if (density >= 10)   return 'rural';
+  return 'remoto';
+}
 
 export function formatAudience(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';

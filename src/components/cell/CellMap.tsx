@@ -17,7 +17,7 @@ import ErbPinPopupContent from './ErbPinPopupContent';
 import HexPopupContent, { type HexPopupData } from './HexPopupContent';
 import { fetchERBs, getFilterOptions, type ERB } from './cellData';
 import { OPERADORA_COLORS } from '../../lib/constants';
-import { formatAudience, estimateCellAudience, estimateCellRadius } from '../../lib/audience';
+import { formatAudience, estimateCellAudience, estimateCellMetrics } from '../../lib/audience';
 import { preloadMunDensity } from '../../lib/munDensity';
 import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, setErbsForDominance, getErbById, getErbIdsInVisibleHexes, getErbIdsInHexSet, buildHexToErbsMap, getHexCenter, getResolutionForZoom, DOMINANCE_LAYER_IDS, type DominanceOptions } from './analysisLayers';
 import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
@@ -565,7 +565,14 @@ export default function CellMap() {
     if (!e || !mapRef.current) return;
     setHexPopup(null); // only one popup at a time
     setPinPopup({ erb: e, lngLat: coords });
-    const radius = estimateCellRadius(e.tech_principal, e.freq_mhz?.[0] ?? 0);
+    // Use the EFFECTIVE radius (density-capped) so the visible circle
+    // matches the audience number the popup shows. If we drew the
+    // theoretical 5-15km ring while displaying an audience computed
+    // from a 2km effective reach, the two would contradict each other.
+    const { radius } = estimateCellMetrics(
+      e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
+      { mun: e.municipio }
+    );
     drawCoverageCircle(e, coords, radius);
   }, []);
 
@@ -750,7 +757,7 @@ export default function CellMap() {
       if (!e) continue;
       devices += estimateCellAudience(
         e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
-        { mun: e.municipio, operatorName: e.prestadora_norm }
+        { mun: e.municipio }
       );
     }
     return { count: selectedHexes.size, erbsCount: erbIds.length, devices, erbIds };
@@ -863,7 +870,7 @@ export default function CellMap() {
     const sel = allErbs.filter(e => cart.has(e.id));
     const a = sel.reduce((s, e) => s + estimateCellAudience(
       e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
-      { mun: e.municipio, operatorName: e.prestadora_norm }
+      { mun: e.municipio }
     ), 0);
     const u = [...new Set(sel.map(e => e.uf))];
     return <span><strong className="text-[var(--text-primary)] font-semibold">{formatAudience(a)}</strong> devices · {u.length} UFs</span>;
@@ -874,7 +881,7 @@ export default function CellMap() {
       tipo: e.tech_principal, frequencia: e.freq_mhz?.[0] ? `${e.freq_mhz[0]} MHz` : '', municipio: e.municipio, uf: e.uf,
       audience: estimateCellAudience(
         e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
-        { mun: e.municipio, operatorName: e.prestadora_norm }
+        { mun: e.municipio }
       ),
     })), [cart, allErbs]);
 
