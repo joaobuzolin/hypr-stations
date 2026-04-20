@@ -30,9 +30,18 @@ import { MAPS } from '../lib/constants';
         </div>
 
         {/* Stats */}
-        <div class="mb-9">
+        <div>
           <HubStats client:visible />
         </div>
+
+        {/* Divider — subtle horizontal line fading at the edges, purely
+            decorative. max-width matches the map card grid below so it
+            reads as anchoring that block rather than spanning the page. */}
+        <div
+          class="max-w-[580px] mx-auto my-9 h-px"
+          aria-hidden="true"
+          style="background: linear-gradient(to right, transparent, var(--border), transparent); animation: fadeIn 0.7s ease 0.2s both"
+        ></div>
 
         {/* Map cards */}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-w-[580px] mx-auto">
