@@ -34,14 +34,29 @@ function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {
     >
       {/* Logo */}
       <a href="/" className="flex items-center gap-[11px] no-underline shrink-0">
-        <div className="w-9 h-9 rounded-[9px] bg-[var(--accent)] flex items-center justify-center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[var(--on-accent)]">
-            <path d="M4 6h4v12H4V6zm6 4h4v8h-4v-8zm6-2h4v10h-4V8z" fill="currentColor" />
+        <div className="w-10 h-10 rounded-[10px] bg-[var(--accent)] flex items-center justify-center">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-[var(--on-accent)]"
+            aria-hidden="true"
+          >
+            <line x1="12" y1="5" x2="12" y2="21" />
+            <path d="M5 9 Q 12 4 19 9" />
+            <path d="M7.5 12 Q 12 8.5 16.5 12" />
+            <path d="M10 15 Q 12 13 14 15" />
+            <circle cx="12" cy="4.5" r="1.3" fill="currentColor" stroke="none" />
           </svg>
         </div>
         <div className="hidden sm:flex items-baseline gap-1">
-          <span className="font-heading text-[18px] font-bold tracking-[0.01em] text-[var(--text-primary)]">HYPR</span>
-          <span className="font-heading text-[18px] font-bold tracking-[0.01em] text-[var(--accent)]">Station</span>
+          <span className="font-heading text-[24px] font-semibold tracking-[0.01em] text-[var(--text-primary)]">HYPR</span>
+          <span className="font-heading text-[24px] font-semibold tracking-[0.01em] text-[var(--accent)]">Station</span>
         </div>
       </a>
 
