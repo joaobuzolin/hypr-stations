@@ -11,7 +11,10 @@ interface Props {
 export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props) {
   const opColor = OPERADORA_COLORS[erb.prestadora_norm] || '#7a6e64';
   const radius = estimateCellRadius(erb.tech_principal, erb.freq_mhz?.[0] ?? 0);
-  const aud = estimateCellAudience(erb.tech_principal, erb.uf, erb.freq_mhz?.[0] ?? 0);
+  const aud = estimateCellAudience(erb.tech_principal, erb.uf, erb.freq_mhz?.[0] ?? 0, {
+    mun: erb.municipio,
+    operatorName: erb.prestadora_norm,
+  });
 
   return (
     <div style={{ minWidth: 280 }}>
@@ -66,7 +69,7 @@ export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props)
           borderRadius: 10, textAlign: 'center',
         }}>
           <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>
-            População no raio
+            Audiência potencial
           </div>
           <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--accent)', letterSpacing: '-0.01em' }}>
             {formatAudience(aud)} devices

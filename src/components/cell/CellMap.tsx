@@ -17,6 +17,7 @@ import HexPopupContent, { type HexPopupData } from './HexPopupContent';
 import { fetchERBs, getFilterOptions, type ERB } from './cellData';
 import { OPERADORA_COLORS } from '../../lib/constants';
 import { formatAudience, estimateCellAudience, estimateCellRadius } from '../../lib/audience';
+import { preloadMunDensity } from '../../lib/munDensity';
 import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, setErbsForDominance, getErbById, getErbIdsInVisibleHexes, buildHexToErbsMap, getHexCenter, getResolutionForZoom, DOMINANCE_LAYER_IDS, type DominanceOptions } from './analysisLayers';
 import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
 import { downloadCSV } from '../../lib/csv';
@@ -82,10 +83,13 @@ export default function CellMap() {
 
   // Load data
   useEffect(() => {
-    // Load ERBs and dominance data in parallel
+    // Load ERBs, dominance, and IBGE municipal density in parallel.
+    // preloadMunDensity is fire-and-forget — audience estimator falls back
+    // to UF averages if it hasn't resolved by the time a popup opens.
     Promise.all([
       fetchERBs((n) => setLoadProgress(n)),
       loadDominanceData(),
+      preloadMunDensity(),
     ]).then(([data]) => {
       setAllErbs(data);
       setFiltered(data);
@@ -584,7 +588,10 @@ export default function CellMap() {
   const summary = useMemo(() => {
     if (!cart.size) return null;
     const sel = allErbs.filter(e => cart.has(e.id));
-    const a = sel.reduce((s, e) => s + estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0), 0);
+    const a = sel.reduce((s, e) => s + estimateCellAudience(
+      e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
+      { mun: e.municipio, operatorName: e.prestadora_norm }
+    ), 0);
     const u = [...new Set(sel.map(e => e.uf))];
     return <span><strong className="text-[var(--text-primary)] font-semibold">{formatAudience(a)}</strong> devices · {u.length} UFs</span>;
   }, [cart, allErbs]);
@@ -592,7 +599,10 @@ export default function CellMap() {
   const ckStations = useMemo(() =>
     allErbs.filter(e => cart.has(e.id)).map(e => ({
       tipo: e.tech_principal, frequencia: e.freq_mhz?.[0] ? `${e.freq_mhz[0]} MHz` : '', municipio: e.municipio, uf: e.uf,
-      audience: estimateCellAudience(e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0),
+      audience: estimateCellAudience(
+        e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
+        { mun: e.municipio, operatorName: e.prestadora_norm }
+      ),
     })), [cart, allErbs]);
 
 
