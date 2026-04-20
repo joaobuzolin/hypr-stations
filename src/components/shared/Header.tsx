@@ -47,11 +47,12 @@ function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {
             className="text-[var(--on-accent)]"
             aria-hidden="true"
           >
-            <line x1="12" y1="5" x2="12" y2="21" />
-            <path d="M5 9 Q 12 4 19 9" />
-            <path d="M7.5 12 Q 12 8.5 16.5 12" />
-            <path d="M10 15 Q 12 13 14 15" />
-            <circle cx="12" cy="4.5" r="1.3" fill="currentColor" stroke="none" />
+            <line x1="12" y1="4" x2="12" y2="21" />
+            <path d="M8 8 Q 6 11 8 14" />
+            <path d="M16 8 Q 18 11 16 14" />
+            <path d="M5 6 Q 1.5 11 5 16" />
+            <path d="M19 6 Q 22.5 11 19 16" />
+            <circle cx="12" cy="3.5" r="1.3" fill="currentColor" stroke="none" />
           </svg>
         </div>
         <div className="hidden sm:flex items-baseline gap-1">
