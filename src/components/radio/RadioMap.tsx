@@ -11,7 +11,8 @@ import MapOverlayPopup from '../shared/MapOverlayPopup';
 import RadioPinPopupContent from './RadioPinPopupContent';
 import { loadRadioData, type RadioStation, type RadioData } from './radioData';
 import { RADIO_COLORS } from '../../lib/constants';
-import { formatAudience, estimateRadioAudience } from '../../lib/audience';
+import { formatAudience, estimateRadioSelection } from '../../lib/audience';
+import { preloadPopulation } from '../../lib/populationData';
 import { downloadCSV } from '../../lib/csv';
 
 const RADIO_CSV_HEADERS = ['tipo','municipio','uf','frequencia','classe','categoria','erp','entidade','carater','finalidade','lat','lng'];
@@ -42,6 +43,7 @@ export default function RadioMap() {
 
   // Load station data on mount
   useEffect(() => {
+    preloadPopulation();
     loadRadioData().then(d => {
       setData(d);
       setFiltered(d.stations);
@@ -132,18 +134,42 @@ export default function RadioMap() {
   }, [cart.size]);
   const selectAll = useCallback(() => { setCart(p => { const n = new Set(p); filtered.forEach(s => n.add(s._sid)); return n; }); }, [filtered]);
 
-  const summary = useMemo(() => {
+  /** Breakdown agregado da seleção. Calculado uma vez e reutilizado em
+   *  summary e CheckoutModal — dedup de sobreposição aplicada internamente. */
+  const selectionBreakdown = useMemo(() => {
     if (!cart.size) return null;
-    const sel = [...cart].map(sid => allStations.find(s => s._sid === sid)).filter(Boolean) as RadioStation[];
-    const a = sel.reduce((s, e) => s + estimateRadioAudience(e.erp, e.tipo, e.classe, e.uf), 0);
-    const u = [...new Set(sel.map(e => e.uf))];
-    return <span><strong className="text-[var(--text-primary)] font-semibold">{formatAudience(a)}</strong> devices · {u.length} UFs</span>;
+    const sel = [...cart]
+      .map(sid => allStations.find(s => s._sid === sid))
+      .filter(Boolean) as RadioStation[];
+    return estimateRadioSelection(sel);
   }, [cart, allStations]);
 
-  const ckStations = useMemo(() => [...cart].map(sid => allStations.find(s => s._sid === sid)).filter(Boolean).map(s => ({
-    tipo: s!.tipo, frequencia: s!.frequencia, municipio: s!.municipio, uf: s!.uf,
-    audience: estimateRadioAudience(s!.erp, s!.tipo, s!.classe, s!.uf),
-  })), [cart, allStations]);
+  const summary = useMemo(() => {
+    if (!selectionBreakdown) return null;
+    const sel = [...cart]
+      .map(sid => allStations.find(s => s._sid === sid))
+      .filter(Boolean) as RadioStation[];
+    const u = [...new Set(sel.map(e => e.uf))];
+    return (
+      <span>
+        <strong className="text-[var(--text-primary)] font-semibold">
+          {formatAudience(selectionBreakdown.population)}
+        </strong>
+        {' pessoas → '}
+        <strong className="text-[var(--accent)] font-semibold">
+          {formatAudience(selectionBreakdown.addressable)}
+        </strong>
+        {' devices · '}{u.length} UFs
+      </span>
+    );
+  }, [selectionBreakdown, cart, allStations]);
+
+  const ckStations = useMemo(() => [...cart]
+    .map(sid => allStations.find(s => s._sid === sid))
+    .filter(Boolean)
+    .map(s => ({
+      tipo: s!.tipo, frequencia: s!.frequencia, municipio: s!.municipio, uf: s!.uf,
+    })), [cart, allStations]);
 
   const fmN = useMemo(() => filtered.filter(s => s.tipo === 'FM').length, [filtered]);
 
@@ -219,6 +245,6 @@ export default function RadioMap() {
     </MobileDrawer>
 
     <SelectionBar count={cart.size} summary={summary} onCheckout={() => setCheckoutOpen(true)} onDownload={isHypr ? () => exportRadioCSV(cart, allStations) : login} canDownload={isHypr} onHeightChange={setSelectionBarHeight} />
-    <CheckoutModal open={checkoutOpen} onClose={() => setCheckoutOpen(false)} stations={ckStations} />
+    <CheckoutModal open={checkoutOpen} onClose={() => setCheckoutOpen(false)} stations={ckStations} breakdown={selectionBreakdown} />
   </>);
 }

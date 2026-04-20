@@ -1,5 +1,5 @@
 import { type ERB } from './cellData';
-import { estimateCellMetrics, formatAudience, densityLabel } from '../../lib/audience';
+import { estimateSingleERB, estimateCellRadius, formatAudience } from '../../lib/audience';
 import { OPERADORA_COLORS, TECH_COLORS } from '../../lib/constants';
 
 interface Props {
@@ -10,16 +10,14 @@ interface Props {
 
 export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props) {
   const opColor = OPERADORA_COLORS[erb.prestadora_norm] || '#7a6e64';
-  // Single call resolves density → effective radius → audience in one pass.
-  // No operator share: audience is the raw population in the signal footprint,
-  // since the driver the user cares about is geographic reach × density.
-  const { radius, audience, density } = estimateCellMetrics(
-    erb.tech_principal, erb.uf, erb.freq_mhz?.[0] ?? 0,
-    { mun: erb.municipio }
-  );
-  const densityText = density >= 100
-    ? `${Math.round(density).toLocaleString('pt-BR')}/km²`
-    : `${density.toFixed(1)}/km²`;
+  const freq = erb.freq_mhz?.[0];
+  const radius = estimateCellRadius(erb.tech_principal, freq);
+  const breakdown = estimateSingleERB({
+    lat: erb.lat,
+    lng: erb.lng,
+    tech_principal: erb.tech_principal,
+    freq_mhz: erb.freq_mhz,
+  });
 
   return (
     <div style={{ minWidth: 280 }}>
@@ -62,12 +60,9 @@ export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props)
           </div>
         </div>
         <div>
-          <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 4 }}>Densidade</div>
+          <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 4 }}>Tech</div>
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-            {densityText}
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, marginLeft: 5 }}>
-              · {densityLabel(density)}
-            </span>
+            {erb.tech_principal}{freq ? <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, marginLeft: 5 }}>· {freq} MHz</span> : null}
           </div>
         </div>
         <div>
@@ -78,23 +73,27 @@ export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props)
         </div>
       </div>
 
-      {audience > 0 && (
+      {breakdown.population > 0 && (
         <div style={{
-          margin: '0 14px 14px', padding: '14px 16px',
+          margin: '0 14px 10px', padding: '14px 14px',
           background: 'var(--accent-muted)', border: '0.5px solid var(--border)',
-          borderRadius: 10, textAlign: 'center',
+          borderRadius: 10,
         }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>
-            Audiência potencial
+          <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, textAlign: 'center' }}>
+            Alcance estimado
           </div>
-          <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--accent)', letterSpacing: '-0.01em' }}>
-            {formatAudience(audience)} devices
+          <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+            <FunnelStep label="Pessoas" value={formatAudience(breakdown.population)} />
+            <FunnelArrow />
+            <FunnelStep label="Smartphones" value={formatAudience(breakdown.smartphones)} />
+            <FunnelArrow />
+            <FunnelStep label="Endereçáveis" value={formatAudience(breakdown.addressable)} accent />
           </div>
         </div>
       )}
 
-      <div style={{ fontSize: 10, color: 'var(--text-faint)', textAlign: 'center', padding: '0 22px 4px', opacity: 0.6 }}>
-        Anatel Fev/2026 · IBGE 2024 · Modelo HYPR
+      <div style={{ fontSize: 10, color: 'var(--text-faint)', textAlign: 'center', padding: '0 22px 10px', opacity: 0.6 }}>
+        Anatel Fev/2026 · IBGE Censo 2022 · Modelo HYPR
       </div>
 
       <div style={{ padding: '0 14px 14px' }}>
@@ -115,4 +114,25 @@ export default function ErbPinPopupContent({ erb, inCart, onToggleCart }: Props)
       </div>
     </div>
   );
+}
+
+function FunnelStep({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div style={{ flex: 1, textAlign: 'center' }}>
+      <div style={{
+        fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em',
+        color: accent ? 'var(--accent)' : 'var(--text-primary)',
+        lineHeight: 1,
+      }}>{value}</div>
+      <div style={{
+        fontSize: 9, marginTop: 4, letterSpacing: '0.03em', textTransform: 'uppercase',
+        color: accent ? 'var(--accent)' : 'var(--text-muted)',
+        fontWeight: accent ? 600 : 400,
+      }}>{label}</div>
+    </div>
+  );
+}
+
+function FunnelArrow() {
+  return <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-faint)', fontSize: 10 }}>→</div>;
 }

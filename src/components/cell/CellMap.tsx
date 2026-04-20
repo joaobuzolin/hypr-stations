@@ -17,7 +17,11 @@ import ErbPinPopupContent from './ErbPinPopupContent';
 import HexPopupContent, { type HexPopupData } from './HexPopupContent';
 import { fetchERBs, getFilterOptions, type ERB } from './cellData';
 import { OPERADORA_COLORS } from '../../lib/constants';
-import { formatAudience, estimateCellAudience, estimateCellMetrics } from '../../lib/audience';
+import {
+  formatAudience, estimateCellRadius, estimateERBSelection,
+  estimateAudienceFromHexes, hexToPopulationChildren,
+} from '../../lib/audience';
+import { preloadPopulation } from '../../lib/populationData';
 import { preloadMunDensity } from '../../lib/munDensity';
 import { addHeatmapLayer, removeHeatmapLayer, addDominanceLayer, removeDominanceLayer, updateDominanceForZoom, forceRedrawDominance, loadDominanceData, setErbsForDominance, getErbById, getErbIdsInVisibleHexes, getErbIdsInHexSet, buildHexToErbsMap, getHexCenter, getResolutionForZoom, DOMINANCE_LAYER_IDS, type DominanceOptions } from './analysisLayers';
 import { updateCoverageCircles, removeCoverageCircles } from './coverageLayer';
@@ -110,18 +114,18 @@ export default function CellMap() {
 
   // Load data
   useEffect(() => {
-    // Load ERBs, dominance, and IBGE municipal density in parallel.
-    // preloadMunDensity is fire-and-forget — audience estimator falls back
-    // to UF averages if it hasn't resolved by the time a popup opens.
+    // Load ERBs, dominance, IBGE municipal density e IBGE populational H3
+    // em paralelo. Os preloads de densidade/população são fire-and-forget —
+    // o estimador de audiência cai em zeros se ainda não carregou quando o
+    // popup abrir.
     Promise.all([
       fetchERBs((n) => setLoadProgress(n)),
       loadDominanceData(),
       preloadMunDensity(),
+      preloadPopulation(),
     ]).then(([data]) => {
       setAllErbs(data);
       setFiltered(data);
-      // Inject ERB reference so analysisLayers can compute hex grids at r6/r7
-      // on demand (pre-computed dominance.json only covers r3-r5).
       setErbsForDominance(data);
       setLoading(false);
     }).catch(err => {
@@ -565,14 +569,10 @@ export default function CellMap() {
     if (!e || !mapRef.current) return;
     setHexPopup(null); // only one popup at a time
     setPinPopup({ erb: e, lngLat: coords });
-    // Use the EFFECTIVE radius (density-capped) so the visible circle
-    // matches the audience number the popup shows. If we drew the
-    // theoretical 5-15km ring while displaying an audience computed
-    // from a 2km effective reach, the two would contradict each other.
-    const { radius } = estimateCellMetrics(
-      e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
-      { mun: e.municipio }
-    );
+    // Desenha o círculo usando o raio teórico da tech — bate com o footprint
+    // considerado pelo estimador de audiência (hexesForCellERB usa esse raio
+    // também).
+    const radius = estimateCellRadius(e.tech_principal, e.freq_mhz?.[0] ?? 0);
     drawCoverageCircle(e, coords, radius);
   }, []);
 
@@ -742,25 +742,46 @@ export default function CellMap() {
   // in lock-step.
   const hexSelectionAggregates = useMemo(() => {
     if (!selectedHexes.size || !allErbs.length) {
-      return { count: 0, erbsCount: 0, devices: 0, erbIds: [] as number[] };
+      return {
+        count: 0, erbsCount: 0, erbIds: [] as number[],
+        population: 0, addressable: 0,
+      };
     }
     const map = mapRef.current;
     const resolution = map ? getResolutionForZoom(map.getZoom()) : 4;
     const erbIds = getErbIdsInHexSet(allErbs, selectedHexes, resolution);
-    if (!erbIds.length) {
-      return { count: selectedHexes.size, erbsCount: 0, devices: 0, erbIds };
+
+    // === Correção do bug de dupla contagem ===
+    // O modelo antigo somava audiência ERB-por-ERB. Em SP capital, isso
+    // multiplicava a população real por 30-50x (cada ERB "reivindicava" a
+    // mesma população de bairro).
+    //
+    // A correção é agregar sobre os HEXES selecionados, não sobre as ERBs.
+    // Cada hex é contado uma única vez independente de quantas ERBs estão
+    // dentro dele.
+    //
+    // Os hexes chegam na resolução do zoom atual (r3-r5 pré-computado).
+    // O dataset populacional está em r7. Expandimos para r7 filhos e
+    // fazemos união para deduplicar fronteiras.
+    const popHexes = new Set<string>();
+    for (const h of selectedHexes) {
+      try {
+        for (const child of hexToPopulationChildren(h, resolution)) {
+          popHexes.add(child);
+        }
+      } catch {
+        // sourceRes inválido — ignora silenciosamente
+      }
     }
-    const erbById = getErbById(allErbs);
-    let devices = 0;
-    for (const id of erbIds) {
-      const e = erbById.get(id);
-      if (!e) continue;
-      devices += estimateCellAudience(
-        e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
-        { mun: e.municipio }
-      );
-    }
-    return { count: selectedHexes.size, erbsCount: erbIds.length, devices, erbIds };
+    const breakdown = estimateAudienceFromHexes(popHexes);
+
+    return {
+      count: selectedHexes.size,
+      erbsCount: erbIds.length,
+      erbIds,
+      population: breakdown.population,
+      addressable: breakdown.addressable,
+    };
   }, [selectedHexes, allErbs, mapZoom]);
 
   const handleAddSelectedHexesToCart = useCallback(() => {
@@ -865,24 +886,38 @@ export default function CellMap() {
     setCart(p => { const n = new Set(p); filteredRef.current.forEach(e => n.add(e.id)); return n; });
   }, []);
 
-  const summary = useMemo(() => {
+  /** Breakdown agregado do plano de ERBs. Dedupe automático de sobreposição:
+   *  cada hex H3 coberto por alguma ERB do carrinho é contado uma vez. */
+  const selectionBreakdown = useMemo(() => {
     if (!cart.size) return null;
     const sel = allErbs.filter(e => cart.has(e.id));
-    const a = sel.reduce((s, e) => s + estimateCellAudience(
-      e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
-      { mun: e.municipio }
-    ), 0);
-    const u = [...new Set(sel.map(e => e.uf))];
-    return <span><strong className="text-[var(--text-primary)] font-semibold">{formatAudience(a)}</strong> devices · {u.length} UFs</span>;
+    return estimateERBSelection(sel);
   }, [cart, allErbs]);
+
+  const summary = useMemo(() => {
+    if (!selectionBreakdown) return null;
+    const sel = allErbs.filter(e => cart.has(e.id));
+    const u = [...new Set(sel.map(e => e.uf))];
+    return (
+      <span>
+        <strong className="text-[var(--text-primary)] font-semibold">
+          {formatAudience(selectionBreakdown.population)}
+        </strong>
+        {' pessoas → '}
+        <strong className="text-[var(--accent)] font-semibold">
+          {formatAudience(selectionBreakdown.addressable)}
+        </strong>
+        {' devices · '}{u.length} UFs
+      </span>
+    );
+  }, [selectionBreakdown, cart, allErbs]);
 
   const ckStations = useMemo(() =>
     allErbs.filter(e => cart.has(e.id)).map(e => ({
-      tipo: e.tech_principal, frequencia: e.freq_mhz?.[0] ? `${e.freq_mhz[0]} MHz` : '', municipio: e.municipio, uf: e.uf,
-      audience: estimateCellAudience(
-        e.tech_principal, e.uf, e.freq_mhz?.[0] ?? 0,
-        { mun: e.municipio }
-      ),
+      tipo: e.tech_principal,
+      frequencia: e.freq_mhz?.[0] ? `${e.freq_mhz[0]} MHz` : '',
+      municipio: e.municipio,
+      uf: e.uf,
     })), [cart, allErbs]);
 
 
@@ -966,7 +1001,8 @@ export default function CellMap() {
           <HexSelectionBar
             count={hexSelectionAggregates.count}
             erbsCount={hexSelectionAggregates.erbsCount}
-            devicesText={formatAudience(hexSelectionAggregates.devices)}
+            populationText={formatAudience(hexSelectionAggregates.population)}
+            addressableText={formatAudience(hexSelectionAggregates.addressable)}
             bottomOffset={selectionBarHeight}
             onAddAll={handleAddSelectedHexesToCart}
             onClear={handleClearHexSelection}
@@ -1073,6 +1109,6 @@ export default function CellMap() {
       onDownload={isHypr ? () => exportCellCSV(allErbs, cart) : login}
       canDownload={isHypr}
       onHeightChange={setSelectionBarHeight} />
-    <CheckoutModal open={checkoutOpen} onClose={() => setCheckoutOpen(false)} stations={ckStations} />
+    <CheckoutModal open={checkoutOpen} onClose={() => setCheckoutOpen(false)} stations={ckStations} breakdown={selectionBreakdown} />
   </>);
 }

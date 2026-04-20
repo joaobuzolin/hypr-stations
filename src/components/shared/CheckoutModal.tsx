@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { EXECS, SHEETS_WEBHOOK } from '../../lib/constants';
-import { formatAudience } from '../../lib/audience';
+import { formatAudience, type AudienceBreakdown } from '../../lib/audience';
 import { usePresence } from './hooks/usePresence';
 import { useIsDesktop } from './hooks/useMediaQuery';
 
@@ -9,20 +9,22 @@ interface CheckoutStation {
   frequencia: string;
   municipio: string;
   uf: string;
-  audience: number;
 }
 
 interface CheckoutModalProps {
   open: boolean;
   onClose: () => void;
   stations: CheckoutStation[];
+  /** Audience breakdown da seleção inteira (com dedupe de sobreposição).
+   *  Quando null, o modal mostra apenas a contagem de estações. */
+  breakdown: AudienceBreakdown | null;
 }
 
 type Step = 'form' | 'execs';
 
 const ANIM_MS = 260;
 
-export default function CheckoutModal({ open, onClose, stations }: CheckoutModalProps) {
+export default function CheckoutModal({ open, onClose, stations, breakdown }: CheckoutModalProps) {
   const isDesktop = useIsDesktop();
   const { mounted, visible } = usePresence(open, ANIM_MS);
 
@@ -49,10 +51,15 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
   }, [mounted]);
 
   const kpis = useMemo(() => {
-    const totalAud = stations.reduce((s, e) => s + e.audience, 0);
     const ufs = [...new Set(stations.map(e => e.uf))];
-    return { count: stations.length, audience: totalAud, ufs: ufs.length };
-  }, [stations]);
+    return {
+      count: stations.length,
+      population: breakdown?.population ?? 0,
+      addressable: breakdown?.addressable ?? 0,
+      smartphones: breakdown?.smartphones ?? 0,
+      ufs: ufs.length,
+    };
+  }, [stations, breakdown]);
 
   const formatPhone = (value: string) => {
     let v = value.replace(/\D/g, '').slice(0, 11);
@@ -81,7 +88,8 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
           name: form.name.trim(), company: form.company.trim(),
           email: form.email.trim(), phone: form.phone,
           budget: form.budget, stations: kpis.count,
-          audience: kpis.audience,
+          population: kpis.population,
+          addressable: kpis.addressable,
           ufs: [...new Set(stations.map(e => e.uf))].join(','),
           stationList: stations.slice(0, 20).map(s => s.frequencia + ' ' + s.municipio + '/' + s.uf).join('; '),
           timestamp: new Date().toISOString(),
@@ -97,10 +105,13 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
 
   const waMessage = useMemo(() => {
     const stList = stations.slice(0, 10).map(s => '- ' + s.frequencia + ' ' + s.municipio + '/' + s.uf).join('\n');
+    const reachLine = kpis.population > 0
+      ? formatAudience(kpis.population) + ' pessoas · ' + formatAudience(kpis.addressable) + ' devices endereçáveis'
+      : 'Plano em estruturação';
     return encodeURIComponent(
       'Olá! Sou ' + form.name + ' da ' + form.company + '.\n\n' +
       'Gostaria de ativar um plano de mídia via HYPR.\n\n' +
-      '*Resumo:*\n' + kpis.count + ' estações | ' + formatAudience(kpis.audience) + ' devices est.\n\n' +
+      '*Resumo:*\n' + kpis.count + ' estações · ' + reachLine + '\n\n' +
       stList + (stations.length > 10 ? '\n... +' + (stations.length - 10) + ' estações' : '') +
       '\n\nOrçamento: ' + (form.budget || 'A definir')
     );
@@ -203,31 +214,71 @@ export default function CheckoutModal({ open, onClose, stations }: CheckoutModal
             </p>
           </div>
 
-          {/* KPIs */}
-          <div className="grid grid-cols-3 gap-2.5 px-6 mb-4">
-            {[
-              { value: kpis.count.toString(), label: 'Estações' },
-              { value: formatAudience(kpis.audience), label: 'Devices est.' },
-              { value: kpis.ufs.toString(), label: 'UFs' },
-            ].map(k => (
-              <div key={k.label} className="bg-[var(--bg-surface2)] rounded-[10px] py-3.5 px-3 text-center">
-                <div className="font-heading text-[17px] font-semibold text-[var(--accent)] leading-none">{k.value}</div>
-                <div className="text-[10px] text-[var(--text-muted)] mt-1.5 uppercase tracking-[0.04em]">{k.label}</div>
+          {/* Audience funnel — População → Smartphones → Endereçáveis (DSP 30d).
+              Só renderiza quando temos breakdown; caso contrário cai num grid
+              simples de contagem. */}
+          {kpis.population > 0 ? (
+            <div className="px-6 mb-4">
+              <div className="rounded-[10px] bg-[var(--bg-surface2)] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] tracking-[0.04em] uppercase text-[var(--text-muted)]">Alcance estimado</span>
+                  <span className="text-[10px] text-[var(--text-faint)]">{kpis.count} estações · {kpis.ufs} UFs</span>
+                </div>
+                <div className="flex items-stretch gap-1.5">
+                  <div className="flex-1 text-center">
+                    <div className="font-heading text-[17px] font-semibold text-[var(--text-primary)] leading-none">
+                      {formatAudience(kpis.population)}
+                    </div>
+                    <div className="text-[9px] text-[var(--text-muted)] mt-1.5 uppercase tracking-[0.04em]">Pessoas</div>
+                  </div>
+                  <div className="flex items-center text-[var(--text-faint)] text-[10px]">→</div>
+                  <div className="flex-1 text-center">
+                    <div className="font-heading text-[17px] font-semibold text-[var(--text-primary)] leading-none">
+                      {formatAudience(kpis.smartphones)}
+                    </div>
+                    <div className="text-[9px] text-[var(--text-muted)] mt-1.5 uppercase tracking-[0.04em]">Smartphones</div>
+                  </div>
+                  <div className="flex items-center text-[var(--text-faint)] text-[10px]">→</div>
+                  <div className="flex-1 text-center">
+                    <div className="font-heading text-[17px] font-semibold text-[var(--accent)] leading-none">
+                      {formatAudience(kpis.addressable)}
+                    </div>
+                    <div className="text-[9px] text-[var(--accent)] mt-1.5 uppercase tracking-[0.04em] font-semibold">Endereçáveis</div>
+                  </div>
+                </div>
+                <div className="text-[9px] text-[var(--text-faint)] mt-3 text-center leading-snug">
+                  IBGE Censo 2022 · TIC Domicílios 2023 · dedup de sobreposição aplicada
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2.5 px-6 mb-4">
+              <div className="bg-[var(--bg-surface2)] rounded-[10px] py-3.5 px-3 text-center">
+                <div className="font-heading text-[17px] font-semibold text-[var(--accent)] leading-none">{kpis.count}</div>
+                <div className="text-[10px] text-[var(--text-muted)] mt-1.5 uppercase tracking-[0.04em]">Estações</div>
+              </div>
+              <div className="bg-[var(--bg-surface2)] rounded-[10px] py-3.5 px-3 text-center">
+                <div className="font-heading text-[17px] font-semibold text-[var(--accent)] leading-none">{kpis.ufs}</div>
+                <div className="text-[10px] text-[var(--text-muted)] mt-1.5 uppercase tracking-[0.04em]">UFs</div>
+              </div>
+            </div>
+          )}
 
           {/* Station list */}
           <div className="max-h-32 overflow-y-auto border-y-[0.5px] border-[var(--border)] mb-5">
-            {stations.sort((a, b) => b.audience - a.audience).slice(0, 30).map((s, i) => (
+            {stations.slice(0, 30).map((s, i) => (
               <div key={i} className="flex items-center gap-2.5 px-6 py-2 border-b border-[var(--border)] last:border-b-0 text-[12px]">
                 <span className={`font-semibold shrink-0 ${s.tipo === 'FM' ? 'text-[var(--accent)]' : 'text-[var(--color-gold-400)]'}`}>
                   {s.tipo}
                 </span>
                 <span className="text-[var(--text-primary)] truncate">{s.frequencia} · {s.municipio}/{s.uf}</span>
-                <span className="ml-auto text-[var(--accent)] text-[11px] font-medium shrink-0">{formatAudience(s.audience)}</span>
               </div>
             ))}
+            {stations.length > 30 && (
+              <div className="px-6 py-2 text-[11px] text-[var(--text-muted)] text-center">
+                + {stations.length - 30} estações
+              </div>
+            )}
           </div>
 
           {/* Step content — wrapped so we can animate between steps */}

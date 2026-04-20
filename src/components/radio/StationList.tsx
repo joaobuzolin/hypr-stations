@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { List, useListRef } from 'react-window';
-import { formatAudience, estimateRadioAudience } from '../../lib/audience';
+import { formatAudience, estimateSingleRadio } from '../../lib/audience';
 import type { RadioStation } from './radioData';
 
 interface Props {
@@ -28,7 +28,9 @@ const StationRow = memo(function StationRow({
 
   const sel = cart.has(s._sid);
   const act = activeIdx === index;
-  const aud = estimateRadioAudience(s.erp, s.tipo, s.classe, s.uf);
+  const aud = estimateSingleRadio({
+    lat: s.lat, lng: s.lng, erp: s.erp, tipo: s.tipo, classe: s.classe,
+  }).addressable;
   const isFM = s.tipo === 'FM';
   const pulse = justAddedSid === s._sid;
 

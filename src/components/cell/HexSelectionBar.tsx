@@ -5,8 +5,10 @@ interface HexSelectionBarProps {
   count: number;
   /** Total ERBs aggregated across all selected hexes */
   erbsCount: number;
-  /** Total estimated devices aggregated across all selected hexes */
-  devicesText: string;
+  /** População residente total na área selecionada (IBGE 2022, dedup aplicado) */
+  populationText: string;
+  /** Devices endereçáveis estimados (DSP 30d) */
+  addressableText: string;
   /** Bottom offset in pixels — used to sit above the main SelectionBar
    *  when the cart is active */
   bottomOffset: number;
@@ -28,7 +30,7 @@ const ANIM_MS = 220;
  * immediate.
  */
 export default function HexSelectionBar({
-  count, erbsCount, devicesText, bottomOffset, onAddAll, onClear,
+  count, erbsCount, populationText, addressableText, bottomOffset, onAddAll, onClear,
 }: HexSelectionBarProps) {
   const { mounted, visible } = usePresence(count > 0, ANIM_MS);
   if (!mounted) return null;
@@ -88,7 +90,13 @@ export default function HexSelectionBar({
           </span>
           <span>
             <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-              {devicesText}
+              {populationText}
+            </strong> pessoas
+          </span>
+          <span style={{ color: 'var(--text-faint)' }}>→</span>
+          <span>
+            <strong style={{ color: 'var(--accent)', fontWeight: 600 }}>
+              {addressableText}
             </strong> devices
           </span>
         </div>

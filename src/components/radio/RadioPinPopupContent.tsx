@@ -1,6 +1,8 @@
 import type { RadioStation } from './radioData';
 import { RADIO_COLORS } from '../../lib/constants';
-import { formatAudience, estimateRadioAudience, estimateRadioRadius, getRadioERP } from '../../lib/audience';
+import {
+  formatAudience, estimateSingleRadio, estimateRadioRadius, getRadioERP,
+} from '../../lib/audience';
 
 interface Props {
   station: RadioStation;
@@ -20,7 +22,9 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function RadioPinPopupContent({ station: s, inCart, onToggleCart }: Props) {
   const erp = getRadioERP(s.erp, s.classe);
   const r = Math.round(estimateRadioRadius(erp, s.tipo));
-  const aud = estimateRadioAudience(s.erp, s.tipo, s.classe, s.uf);
+  const breakdown = estimateSingleRadio({
+    lat: s.lat, lng: s.lng, erp: s.erp, tipo: s.tipo, classe: s.classe,
+  });
   const c = s.tipo === 'FM' ? RADIO_COLORS.fm : RADIO_COLORS.am;
   const u = s.tipo === 'FM' ? 'MHz' : 'kHz';
 
@@ -48,11 +52,20 @@ export default function RadioPinPopupContent({ station: s, inCart, onToggleCart 
           <div />
         </div>
       </div>
-      {aud > 0 && (
-        <div style={{ background: 'var(--bg-surface2)', borderRadius: 10, padding: 16, textAlign: 'center', margin: '10px 20px' }}>
-          <div style={{ fontSize: 11, letterSpacing: '0.02em', color: 'var(--text-muted)' }}>Audiência estimada</div>
-          <div style={{ fontWeight: 700, fontSize: 20, color: 'var(--accent)', marginTop: 5, letterSpacing: '-0.01em' }}>
-            {formatAudience(aud)} devices
+      {breakdown.population > 0 && (
+        <div style={{
+          background: 'var(--bg-surface2)', borderRadius: 10,
+          padding: 14, margin: '10px 20px',
+        }}>
+          <div style={{ fontSize: 10, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10, textAlign: 'center' }}>
+            Alcance estimado
+          </div>
+          <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+            <FunnelStep label="Pessoas" value={formatAudience(breakdown.population)} />
+            <FunnelArrow />
+            <FunnelStep label="Smartphones" value={formatAudience(breakdown.smartphones)} />
+            <FunnelArrow />
+            <FunnelStep label="Endereçáveis" value={formatAudience(breakdown.addressable)} accent />
           </div>
         </div>
       )}
@@ -73,8 +86,29 @@ export default function RadioPinPopupContent({ station: s, inCart, onToggleCart 
         </button>
       </div>
       <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', margin: '0 20px 14px', opacity: 0.5 }}>
-        Modelo HYPR: alcance × densidade × penetração × campanha 30d
+        Anatel · IBGE Censo 2022 · Modelo HYPR
       </div>
     </div>
   );
+}
+
+function FunnelStep({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div style={{ flex: 1, textAlign: 'center' }}>
+      <div style={{
+        fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em',
+        color: accent ? 'var(--accent)' : 'var(--text-primary)',
+        lineHeight: 1,
+      }}>{value}</div>
+      <div style={{
+        fontSize: 9, marginTop: 4, letterSpacing: '0.03em', textTransform: 'uppercase',
+        color: accent ? 'var(--accent)' : 'var(--text-muted)',
+        fontWeight: accent ? 600 : 400,
+      }}>{label}</div>
+    </div>
+  );
+}
+
+function FunnelArrow() {
+  return <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-faint)', fontSize: 10 }}>→</div>;
 }
