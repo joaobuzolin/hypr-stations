@@ -23,6 +23,11 @@ const NAV_ITEMS = [
       <path d="M2 20h.01" /><path d="M7 20v-4" /><path d="M12 20v-8" /><path d="M17 20V8" /><path d="M22 4v16" />
     </svg>
   )},
+  { label: 'TV', href: '/tv', icon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="13" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" />
+    </svg>
+  )},
 ];
 
 function HeaderInner({ currentPage, showAuth = false }: HeaderProps) {

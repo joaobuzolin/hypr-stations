@@ -27,13 +27,13 @@ export const MAPS = {
   tv: {
     id: 'tv',
     name: 'TV Map',
-    subtitle: 'Broadcast coverage',
-    description: 'Mapa de estações de TV aberta e transmissores digitais.',
+    subtitle: 'Broadcast & audience',
+    description: 'Mapa de TV aberta (geradoras + retransmissoras) com afiliação por rede, contornos protegidos e penetração de TV paga por município.',
     icon: 'tv',
     href: '/tv',
-    status: 'planned' as const,
+    status: 'active' as const,
     accent: 'gold',
-    stats: { stations: 'TBD', types: 'Digital', source: 'Anatel' },
+    stats: { stations: '14K+', types: 'TVD + RTV', source: 'Anatel/Mosaico' },
   },
 } as const;
 
@@ -65,6 +65,48 @@ export const RADIO_COLORS = {
   am: '#d4c74a',
   fmBg: 'rgba(77, 184, 212, 0.07)',
   amBg: 'rgba(212, 199, 74, 0.07)',
+};
+
+// TV Map — Network colors (V3)
+export const TV_NETWORK_COLORS: Record<string, string> = {
+  'globo':        '#4286f4',
+  'sbt':          '#e05050',
+  'record':       '#d4c74a',
+  'band':         '#9b6fc0',
+  'redetv':       '#3aab8c',
+  'cultura':      '#e07050',
+  'tvbrasil':     '#5ba3e6',
+  'rit':          '#c58fbf',
+  'gazeta':       '#aa8f5e',
+  'cancao':       '#7fa87f',
+  'independente': '#8a8580',
+  'outras':       '#7a6e64',
+};
+
+export const TV_NETWORK_NAMES: Record<string, string> = {
+  'globo':        'Globo',
+  'sbt':          'SBT',
+  'record':       'Record',
+  'band':         'Band',
+  'redetv':       'RedeTV!',
+  'cultura':      'Cultura',
+  'tvbrasil':     'TV Brasil',
+  'rit':          'Rede Vida',
+  'gazeta':       'Gazeta',
+  'cancao':       'Canção Nova',
+  'independente': 'Independente',
+  'outras':       'Outras',
+};
+
+export const TV_NETWORK_ORDER = [
+  'globo', 'sbt', 'record', 'band', 'redetv',
+  'cultura', 'tvbrasil', 'rit', 'gazeta', 'cancao',
+  'independente', 'outras',
+] as const;
+
+export const TV_TYPE_COLORS = {
+  tvd: '#4db8d4',
+  rtv: 'rgba(77, 184, 212, 0.55)',
 };
 
 // Google OAuth

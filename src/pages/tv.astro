@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TvPage from '../components/tv/TvPage';
+---
+
+<BaseLayout title="TV Map" description="Mapa interativo de emissoras de TV digital e retransmissoras do Brasil" fullscreen>
+  <link slot="head" rel="stylesheet" href="/assets/maplibre-gl.css" />
+  <TvPage client:load />
+</BaseLayout>
