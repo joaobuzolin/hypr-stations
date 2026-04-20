@@ -14,7 +14,7 @@ Variável usada:
   v0001 — moradores em domicílios particulares permanentes (população oficial 2022)
 
 Output:
-  public/assets/population-h3.json (formato colunar, ~3-5 MB)
+  public/assets/pop-ibge-2022.json (formato colunar, ~3-5 MB)
 
 Estratégia:
   Processamento UF a UF para controlar memória. Para cada setor:
@@ -59,7 +59,7 @@ BASE_URL = (
 )
 
 CACHE_DIR = Path("/tmp/hypr-ibge-setores")
-OUT_FILE = Path("public/assets/population-h3.json")
+OUT_FILE = Path("public/assets/pop-ibge-2022.json")
 
 
 def download_uf(uf: str) -> Path:

@@ -1,6 +1,6 @@
 // HYPR Station — Population H3 dataset loader
 //
-// Carrega /assets/population-h3.json (~3 MB, ~650 KB gzipped), gerado pelo
+// Carrega /assets/pop-ibge-2022.json (~3 MB, ~650 KB gzipped), gerado pelo
 // script scripts/generate-population-h3.py a partir dos setores censitários
 // IBGE Censo 2022. Expõe lookups sincrônicos após o load inicial.
 //
@@ -45,7 +45,7 @@ export async function preloadPopulation(): Promise<Map<string, HexRecord> | null
   if (_map) return _map;
   if (_loading) return _loading;
 
-  _loading = fetch('/assets/population-h3.json')
+  _loading = fetch('/assets/pop-ibge-2022.json')
     .then(r => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json() as Promise<PopulationPayload>;
@@ -65,7 +65,7 @@ export async function preloadPopulation(): Promise<Map<string, HexRecord> | null
       return m;
     })
     .catch(err => {
-      console.warn('[Population] Failed to load population-h3.json', err);
+      console.warn('[Population] Failed to load pop-ibge-2022.json', err);
       _map = new Map();
       return null;
     });
