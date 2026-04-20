@@ -109,8 +109,29 @@ export interface CellAudienceContext {
 }
 
 /**
+ * Effective coverage radius — clamps the theoretical max (from CELL_RADIUS)
+ * based on local population density to account for cell-sharing and
+ * realistic service areas. A 4G 700MHz antenna CAN technically reach 15km
+ * in open terrain, and 2G 850MHz up to 35km, but:
+ *  - in urban areas, handoff between neighboring ERBs every 500m means
+ *    each antenna's effective service area is much smaller
+ *  - in rural areas, the theoretical max matters, but only where density
+ *    is genuinely low enough that no other ERBs are sharing the ring
+ *
+ * Returns the smaller of: theoretical radius, or density-adjusted cap.
+ */
+function effectiveRadius(theoreticalKm: number, density: number): number {
+  if (density >= 3000) return Math.min(theoreticalKm, 0.6);   // urbano denso (capital)
+  if (density >= 1000) return Math.min(theoreticalKm, 1.2);   // urbano
+  if (density >= 200)  return Math.min(theoreticalKm, 3);     // urbano médio
+  if (density >= 50)   return Math.min(theoreticalKm, 5);     // interior/cidade média
+  if (density >= 10)   return Math.min(theoreticalKm, 10);    // rural médio
+  return theoreticalKm;                                        // deserto absoluto
+}
+
+/**
  * Estimate the number of active mobile devices an ERB likely serves within
- * its theoretical coverage radius.
+ * its effective coverage area (not theoretical max — see effectiveRadius).
  *
  * Precision hierarchy for population density:
  *   1. Municipal (IBGE 2022, from mun-density.json) — requires context.mun
@@ -119,12 +140,12 @@ export interface CellAudienceContext {
  *   3. Fixed floor (30) — last resort when neither is available
  *
  * Formula:
- *   devices = π × r² × density × mobilePenetration × operatorShare
+ *   devices = π × r_effective² × density × mobilePenetration × operatorShare
  *
- * Example: ERB Vivo 5G 2600MHz in São Paulo capital
- *   r = 0.8 km → area ≈ 2.01 km²
- *   density = 7820 hab/km² (IBGE: pop 11.9M / area 1521 km²)
- *   devices = 2.01 × 7820 × 1.05 × 0.384 ≈ 6,340
+ * Example: ERB Vivo 5G 2100MHz in São Paulo capital
+ *   r_theoretical = 1.0 km → clamped to 0.6km (density 7820 is urbano denso)
+ *   area = π × 0.36 ≈ 1.13 km²
+ *   devices = 1.13 × 7820 × 1.05 × 0.384 ≈ 3,565
  */
 export function estimateCellAudience(
   tech: string,
@@ -132,9 +153,6 @@ export function estimateCellAudience(
   freqMhz?: number,
   context?: CellAudienceContext
 ): number {
-  const rKm = estimateCellRadius(tech, freqMhz);
-  const area = Math.PI * rKm * rKm;
-
   // Resolve density with graceful fallback chain.
   let density: number | null = null;
   if (context?.mun && uf) {
@@ -142,6 +160,11 @@ export function estimateCellAudience(
   }
   if (density == null) density = UF_DENSITY[uf] ?? null;
   if (density == null) density = 30; // absolute floor
+
+  // Theoretical radius from tech+freq, clamped by urban cell-sharing reality.
+  const rTheoretical = estimateCellRadius(tech, freqMhz);
+  const rKm = effectiveRadius(rTheoretical, density);
+  const area = Math.PI * rKm * rKm;
 
   // Operator share: local if provided (e.g. from hex dominance), else national.
   const share = context?.localShare ??
